@@ -1,0 +1,69 @@
+import { DEFAULT_TTL } from "../constants";
+import { createCacheHeap } from "../utils/heap.utils";
+import { CacheLevel } from "./interfaces/cache-level";
+import { InMemory } from "./interfaces/in-memory";
+import { Purgable } from "./interfaces/purgable";
+import os from "os";
+import { MemoryManagementStrategy } from "../strategies/interfaces/memory-management-strategy";
+export interface StoredItem {
+  value: unknown;
+  expiry: number;
+}
+
+export interface StoredHeapItem extends StoredItem {
+  key: string; 
+}
+
+export class MemoryCacheLevel implements CacheLevel, Purgable, InMemory<StoredHeapItem> {
+  protected store = new Map<string, StoredItem>();
+  protected heap = createCacheHeap<StoredHeapItem>(item => item.expiry);
+
+  constructor(protected strategy: MemoryManagementStrategy<StoredHeapItem>) {
+    this.strategy.execute(this);
+  }
+
+  async get<T>(key: string, value?: (() => Promise<T>) | T, ttl?: number, namespace?: string): Promise<T | null> {
+    const cachedValue = this.store.get(key) as StoredItem | undefined;
+    if (cachedValue === null || cachedValue === undefined) {
+      let newValue: unknown;
+
+      if (value instanceof Function) {
+        newValue = await value();
+      } else {
+        newValue = value;
+      }
+
+      await this.set(key, newValue, ttl);
+      return newValue as T;
+    }
+    return cachedValue.value as T;
+  }
+  set<T>(key: string, value: T, ttl: number = DEFAULT_TTL): Promise<T | null> {
+    this.strategy.execute(this);
+
+    const expiryDate = Date.now() + ttl;
+
+    const storedItem = { value, expiry: expiryDate };
+    const heapItem: StoredHeapItem = { key, ...storedItem };
+
+    this.store.set(key, storedItem);
+    this.heap.insert(heapItem);
+
+    return Promise.resolve(value as T);
+  }
+  del(key: string): Promise<void> {
+    this.store.delete(key);
+    return Promise.resolve();
+  }
+  purge(): void {
+    this.heap.clear();
+    this.store.clear();
+  }
+  getMemoryUsage(): number {
+    const memoryAvailable = os.totalmem() - os.freemem();
+    return (memoryAvailable / os.totalmem()) * 100;
+  }
+  getHeap() {
+    return this.heap;
+  }
+}
