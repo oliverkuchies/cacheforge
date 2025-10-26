@@ -1,1 +1,1 @@
-export * from './first-expiring-memory.policy';
+export * from "./first-expiring-memory.policy";

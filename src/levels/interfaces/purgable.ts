@@ -1,7 +1,7 @@
 export interface Purgable {
-    /**
-     * Purge entries from the cache level.
-     * @returns void
-     */
-    purge: () => void;
+	/**
+	 * Purge entries from the cache level.
+	 * @returns void
+	 */
+	purge: () => void;
 }

@@ -1,5 +1,5 @@
-import { InMemory } from "../../levels/interfaces/in-memory";
+import type { InMemory } from "../../levels/interfaces/in-memory";
 
 export interface MemoryStrategy<T> {
-    constructor(memory: InMemory<T>): void;
+	checkCondition(memory: InMemory<T>): boolean;
 }

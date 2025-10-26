@@ -1,5 +1,5 @@
-import { MemoryCacheLevel } from "../levels";
+import type { MemoryCacheLevel } from "../levels";
 
 export abstract class MemoryEvictionPolicy {
-    abstract evict(cacheLevel: MemoryCacheLevel): void;
+	abstract evict(cacheLevel: MemoryCacheLevel): void;
 }
