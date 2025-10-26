@@ -4,8 +4,9 @@ import {
 	type StartedRedisContainer,
 } from "@testcontainers/redis";
 import Redis from "ioredis";
-import { beforeAll, describe, expect, expectTypeOf, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { CacheService } from "./";
+import { VersionManager } from "./features/version-manager";
 import {
 	MemoryCacheLevel,
 	RedisCacheLevel,
@@ -13,7 +14,6 @@ import {
 } from "./levels";
 import { FirstExpiringMemoryPolicy } from "./policies/first-expiring-memory.policy";
 import { MemoryPercentageLimitStrategy } from "./strategies/memory-percentage-limit.strategy";
-import { VersionManager } from "./features/version-manager";
 
 let redisContainer: StartedRedisContainer;
 let redisCache: RedisCacheLevel;
@@ -23,11 +23,9 @@ let cacheService: CacheService;
 let versionedCacheService: CacheService;
 let faultyFirstLevelVersionedCacheService: CacheService;
 let faultyFirstLevelCacheService: CacheService;
-let allFaultyLevelsCacheService : CacheService;
-let allFaultyLevelsVersionedCacheService : CacheService;
-const memoryStrategy = new MemoryPercentageLimitStrategy<StoredHeapItem>(
-	70,
-);
+let allFaultyLevelsCacheService: CacheService;
+let allFaultyLevelsVersionedCacheService: CacheService;
+const memoryStrategy = new MemoryPercentageLimitStrategy<StoredHeapItem>(70);
 const evictionPolicy = new FirstExpiringMemoryPolicy();
 memoryLevel = new MemoryCacheLevel({
 	memoryStrategies: [memoryStrategy],
@@ -38,17 +36,23 @@ const faultyMemoryLevel = new MemoryCacheLevel({
 	evictionPolicy: evictionPolicy,
 });
 
-const faultyMemoryGet = vi.spyOn(faultyMemoryLevel, 'get').mockImplementation(() => {
-	throw new Error("Faulty Memory Level, failed to get")
-})
+const faultyMemoryGet = vi
+	.spyOn(faultyMemoryLevel, "get")
+	.mockImplementation(() => {
+		throw new Error("Faulty Memory Level, failed to get");
+	});
 
-const faultyMemorySet = vi.spyOn(faultyMemoryLevel, 'set').mockImplementation(() => {
-	throw new Error("Faulty Memory Level, failed to set")
-})
+const faultyMemorySet = vi
+	.spyOn(faultyMemoryLevel, "set")
+	.mockImplementation(() => {
+		throw new Error("Faulty Memory Level, failed to set");
+	});
 
-const faultyMemoryDel = vi.spyOn(faultyMemoryLevel, 'del').mockImplementation(() => {
-	throw new Error("Faulty Memory Level, failed to delete")
-})
+const faultyMemoryDel = vi
+	.spyOn(faultyMemoryLevel, "del")
+	.mockImplementation(() => {
+		throw new Error("Faulty Memory Level, failed to delete");
+	});
 
 describe("Cache Service with multiple levels and versioning", () => {
 	beforeAll(async () => {
@@ -71,7 +75,7 @@ describe("Cache Service with multiple levels and versioning", () => {
 		});
 
 		faultyFirstLevelCacheService = new CacheService({
-			levels: [faultyMemoryLevel, redisCache]
+			levels: [faultyMemoryLevel, redisCache],
 		});
 
 		allFaultyLevelsVersionedCacheService = new CacheService({
@@ -80,8 +84,8 @@ describe("Cache Service with multiple levels and versioning", () => {
 		});
 
 		allFaultyLevelsCacheService = new CacheService({
-			levels: [faultyMemoryLevel, faultyMemoryLevel]
-		});		
+			levels: [faultyMemoryLevel, faultyMemoryLevel],
+		});
 	});
 
 	it("should correctly store and retrieve versioned keys across cache levels", async () => {
@@ -231,127 +235,204 @@ describe("Cache Service with multiple levels and versioning", () => {
 		);
 	});
 
-    it('should execute closure to get value if key is missing', async () => {
-    const testKey = faker.string.alpha(10);
-    const testValue = faker.number.int();
-    
-    const retrievedValue = await cacheService.get<number>(testKey, async () => {
-      return testValue;
-    });
+	it("should execute closure to get value if key is missing", async () => {
+		const testKey = faker.string.alpha(10);
+		const testValue = faker.number.int();
 
-    expect(retrievedValue).toBe(testValue);
-    
-    const cachedValue = await cacheService.get<number>(testKey);
-    expect(cachedValue).toBe(testValue);
-  });
+		const retrievedValue = await cacheService.get<number>(testKey, async () => {
+			return testValue;
+		});
 
-  it('should return correct value for namespaced keys', async () => {
-    const mockedMemorySet = vi.spyOn(memoryLevel, 'set');
-    const mockedMemoryGet = vi.spyOn(memoryLevel, 'get');
-    const cacheKey = faker.string.alpha(10);
-    const namespace = faker.string.alpha(5);
-    const value = faker.string.alpha(10);
-    
-    await versionedCacheService.set(cacheKey, value, 3600, namespace);
+		expect(retrievedValue).toBe(testValue);
 
-    // The system attempts to receive the version key
-    expect(mockedMemoryGet).toHaveBeenCalledWith(`${namespace}:version`, 1, 604800);
-    // Great, the version is now 1.
-    // Lets use this to set the value of our cache key
-    expect(mockedMemorySet).toHaveBeenCalledWith(`${cacheKey}:1`, value, 3600);
+		const cachedValue = await cacheService.get<number>(testKey);
+		expect(cachedValue).toBe(testValue);
+	});
 
-	expect(await versionedCacheService.get(cacheKey, undefined, 3600, namespace)).toBe(value);
-  });
+	it("should return correct value for namespaced keys", async () => {
+		const mockedMemorySet = vi.spyOn(memoryLevel, "set");
+		const mockedMemoryGet = vi.spyOn(memoryLevel, "get");
+		const cacheKey = faker.string.alpha(10);
+		const namespace = faker.string.alpha(5);
+		const value = faker.string.alpha(10);
 
-  it('should return the values from redis if memory fails in versioned cache', async () => {
-	const mockedRedisSet = vi.spyOn(redisCache, 'set');
-    const mockedRedisGet = vi.spyOn(redisCache, 'get');
-    const cacheKey = faker.string.alpha(10);
-    const namespace = faker.string.alpha(5);
-    const value = faker.string.alpha(10);
-    
-    await faultyFirstLevelVersionedCacheService.set(cacheKey, value, 3600, namespace);
+		await versionedCacheService.set(cacheKey, value, 3600, namespace);
 
-    expect(faultyMemoryGet).toHaveBeenCalled();
-    expect(faultyMemorySet).toHaveBeenCalled();
-	expect(mockedRedisSet, "Redis should be called with set").toHaveBeenCalledWith(`${cacheKey}:1`, value, 3600);
-	expect(mockedRedisGet).not.toHaveBeenCalled();
-	expect(await faultyFirstLevelVersionedCacheService.get(cacheKey, undefined, 3600, namespace)).toBe(value);
+		// The system attempts to receive the version key
+		expect(mockedMemoryGet).toHaveBeenCalledWith(
+			`${namespace}:version`,
+			1,
+			604800,
+		);
+		// Great, the version is now 1.
+		// Lets use this to set the value of our cache key
+		expect(mockedMemorySet).toHaveBeenCalledWith(`${cacheKey}:1`, value, 3600);
 
-	await faultyFirstLevelVersionedCacheService.del(cacheKey, namespace);
-	expect(faultyMemoryDel).toBeCalled();
-	expect(await faultyFirstLevelVersionedCacheService.get(cacheKey, undefined, 3600, namespace)).toBe(undefined);
-  })
+		expect(
+			await versionedCacheService.get(cacheKey, undefined, 3600, namespace),
+		).toBe(value);
+	});
 
-it('should return the values from redis if memory fails in non-versioned cache', async () => {
-	const mockedRedisSet = vi.spyOn(redisCache, 'set');
-    const mockedRedisGet = vi.spyOn(redisCache, 'get');
-    const cacheKey = faker.string.alpha(10);
-    const namespace = faker.string.alpha(5);
-    const value = faker.string.alpha(10);
-    
-    await faultyFirstLevelCacheService.set(cacheKey, value, 3600, namespace);
+	it("should return the values from redis if memory fails in versioned cache", async () => {
+		const mockedRedisSet = vi.spyOn(redisCache, "set");
+		const mockedRedisGet = vi.spyOn(redisCache, "get");
+		const cacheKey = faker.string.alpha(10);
+		const namespace = faker.string.alpha(5);
+		const value = faker.string.alpha(10);
 
-    expect(faultyMemoryGet).toHaveBeenCalled();
-    expect(faultyMemorySet).toHaveBeenCalled();
-	expect(mockedRedisSet, "Redis should be called with set").toHaveBeenCalledWith(`${cacheKey}`, value, 3600);
-	expect(mockedRedisGet).not.toHaveBeenCalled();
-	expect(await faultyFirstLevelCacheService.get(cacheKey, undefined, 3600, namespace)).toBe(value);
-  })
+		await faultyFirstLevelVersionedCacheService.set(
+			cacheKey,
+			value,
+			3600,
+			namespace,
+		);
 
-  it('should return null if all fail', async () => {
-    const cacheKey = faker.string.alpha(10);
-    const namespace = faker.string.alpha(5);
-    const value = faker.string.alpha(10);
-	await allFaultyLevelsCacheService.set(cacheKey, value, 3600, namespace);
-	await allFaultyLevelsVersionedCacheService.set(cacheKey, value, 3600, namespace);
+		expect(faultyMemoryGet).toHaveBeenCalled();
+		expect(faultyMemorySet).toHaveBeenCalled();
+		expect(
+			mockedRedisSet,
+			"Redis should be called with set",
+		).toHaveBeenCalledWith(`${cacheKey}:1`, value, 3600);
+		expect(mockedRedisGet).not.toHaveBeenCalled();
+		expect(
+			await faultyFirstLevelVersionedCacheService.get(
+				cacheKey,
+				undefined,
+				3600,
+				namespace,
+			),
+		).toBe(value);
 
-	expect(await allFaultyLevelsCacheService.get(cacheKey, undefined, 3600, namespace)).toBe(null);
-	expect(await allFaultyLevelsVersionedCacheService.get(cacheKey, undefined, 3600, namespace)).toBe(null);
-  });
+		await faultyFirstLevelVersionedCacheService.del(cacheKey, namespace);
+		expect(faultyMemoryDel).toBeCalled();
+		expect(
+			await faultyFirstLevelVersionedCacheService.get(
+				cacheKey,
+				undefined,
+				3600,
+				namespace,
+			),
+		).toBe(undefined);
+	});
 
-	it('should throw an error if setting/getting with no levels', async () => {
+	it("should return the values from redis if memory fails in non-versioned cache", async () => {
+		const mockedRedisSet = vi.spyOn(redisCache, "set");
+		const mockedRedisGet = vi.spyOn(redisCache, "get");
+		const cacheKey = faker.string.alpha(10);
+		const namespace = faker.string.alpha(5);
+		const value = faker.string.alpha(10);
+
+		await faultyFirstLevelCacheService.set(cacheKey, value, 3600, namespace);
+
+		expect(faultyMemoryGet).toHaveBeenCalled();
+		expect(faultyMemorySet).toHaveBeenCalled();
+		expect(
+			mockedRedisSet,
+			"Redis should be called with set",
+		).toHaveBeenCalledWith(`${cacheKey}`, value, 3600);
+		expect(mockedRedisGet).not.toHaveBeenCalled();
+		expect(
+			await faultyFirstLevelCacheService.get(
+				cacheKey,
+				undefined,
+				3600,
+				namespace,
+			),
+		).toBe(value);
+	});
+
+	it("should return null if all fail", async () => {
+		const cacheKey = faker.string.alpha(10);
+		const namespace = faker.string.alpha(5);
+		const value = faker.string.alpha(10);
+		await allFaultyLevelsCacheService.set(cacheKey, value, 3600, namespace);
+		await allFaultyLevelsVersionedCacheService.set(
+			cacheKey,
+			value,
+			3600,
+			namespace,
+		);
+
+		expect(
+			await allFaultyLevelsCacheService.get(
+				cacheKey,
+				undefined,
+				3600,
+				namespace,
+			),
+		).toBe(null);
+		expect(
+			await allFaultyLevelsVersionedCacheService.get(
+				cacheKey,
+				undefined,
+				3600,
+				namespace,
+			),
+		).toBe(null);
+	});
+
+	it("should throw an error if setting/getting with no levels", async () => {
 		const noLevelsCacheService = new CacheService({
 			levels: [],
-			versioning: true
+			versioning: true,
 		});
 		const cacheKey = faker.string.alpha(10);
 		const namespace = faker.string.alpha(5);
 		const value = faker.string.alpha(10);
-		await expect(noLevelsCacheService.set(cacheKey, value, 3600, namespace)).rejects.toThrowError('set: Failed to find first cache level');
-		await expect(noLevelsCacheService.get(cacheKey, undefined, 3600, namespace)).rejects.toThrowError('set: Failed to find first cache level');
+		await expect(
+			noLevelsCacheService.set(cacheKey, value, 3600, namespace),
+		).rejects.toThrowError("set: Failed to find first cache level");
+		await expect(
+			noLevelsCacheService.get(cacheKey, undefined, 3600, namespace),
+		).rejects.toThrowError("set: Failed to find first cache level");
 	});
 
-	it('should gracefully handle errors in del for non-versioned cache', async () => {
+	it("should gracefully handle errors in del for non-versioned cache", async () => {
 		const erroringLevel = {
-			del: vi.fn().mockImplementation(() => { throw new Error('del error') }),
+			del: vi.fn().mockImplementation(() => {
+				throw new Error("del error");
+			}),
 			set: vi.fn(),
 			get: vi.fn(),
 		};
 		const service = new CacheService({ levels: [erroringLevel] });
-		await expect(service.del('key')).resolves.toBeUndefined();
-		expect(erroringLevel.del).toHaveBeenCalledWith('key');
+		await expect(service.del("key")).resolves.toBeUndefined();
+		expect(erroringLevel.del).toHaveBeenCalledWith("key");
 	});
 
-	it('should gracefully handle errors in del for versioned cache', async () => {
+	it("should gracefully handle errors in del for versioned cache", async () => {
 		const erroringLevel = {
-			del: vi.fn().mockImplementation(() => { throw new Error('del error') }),
-			set: vi.fn().mockImplementation(() => { throw new Error('set error') }),
+			del: vi.fn().mockImplementation(() => {
+				throw new Error("del error");
+			}),
+			set: vi.fn().mockImplementation(() => {
+				throw new Error("set error");
+			}),
 			get: vi.fn(),
 		};
-		vi.spyOn(VersionManager.prototype, 'setWithVersion').mockImplementationOnce(() => { throw new Error('set error'); })
-		
-		const service = new CacheService({ levels: [erroringLevel], versioning: true });
-		const warnSpy = vi.spyOn(console, 'warn').mockImplementation((contents) => {
+		vi.spyOn(VersionManager.prototype, "setWithVersion").mockImplementationOnce(
+			() => {
+				throw new Error("set error");
+			},
+		);
+
+		const service = new CacheService({
+			levels: [erroringLevel],
+			versioning: true,
+		});
+		const warnSpy = vi.spyOn(console, "warn").mockImplementation((contents) => {
 			console.info(contents);
 		});
 
-		await service.set('test', 'test123')
+		await service.set("test", "test123");
 
-		expect(warnSpy).toHaveBeenCalledWith("Failed to setWithVersion, gracefully continuing with next level.", new Error('set error'));
+		expect(warnSpy).toHaveBeenCalledWith(
+			"Failed to setWithVersion, gracefully continuing with next level.",
+			new Error("set error"),
+		);
 		warnSpy.mockRestore();
 
-		await expect(service.del('key')).resolves.toBeUndefined();
-		expect(erroringLevel.del).toHaveBeenCalledWith('key:1');
+		await expect(service.del("key")).resolves.toBeUndefined();
+		expect(erroringLevel.del).toHaveBeenCalledWith("key:1");
 	});
 });

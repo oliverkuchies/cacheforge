@@ -41,7 +41,7 @@ describe("Versioning Interface", () => {
 		const versionManager = new VersionManager(redisCache);
 
 		const version = await versionManager.set(testKey, testValue);
-        expect(version).toBe('1');
+		expect(version).toBe("1");
 		const retrievedValue = await versionManager.get<string>(testKey);
 		expect(retrievedValue).toBe(testValue);
 

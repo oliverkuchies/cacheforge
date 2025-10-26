@@ -43,13 +43,24 @@ export class CacheService {
 				throw new Error("set: Failed to find first cache level");
 			}
 			const versionedLevel = new VersionManager(firstLevel);
-			const currentVersion = await versionedLevel.getCurrentVersion(namespace ?? key);
+			const currentVersion = await versionedLevel.getCurrentVersion(
+				namespace ?? key,
+			);
 			for (const level of this.levels) {
 				try {
 					const currentVersionedLevel = new VersionManager(level);
-					return await currentVersionedLevel.getWithVersion<T>(key, currentVersion, valueGetter, ttl, namespace);
+					return await currentVersionedLevel.getWithVersion<T>(
+						key,
+						currentVersion,
+						valueGetter,
+						ttl,
+						namespace,
+					);
 				} catch (e) {
-					console.warn("Failed to getWithVersion, gracefully continuing with next level.", e);
+					console.warn(
+						"Failed to getWithVersion, gracefully continuing with next level.",
+						e,
+					);
 				}
 			}
 			return null;
@@ -62,7 +73,10 @@ export class CacheService {
 					return value;
 				}
 			} catch (e) {
-				console.warn("Failed to get, gracefully continuing with next level.", e);
+				console.warn(
+					"Failed to get, gracefully continuing with next level.",
+					e,
+				);
 			}
 		}
 		return null;
@@ -74,17 +88,24 @@ export class CacheService {
 	 * @param value - value to cache
 	 * @param ttl - time to live in seconds
 	 */
-	async set<T>(key: string, value: T, ttl = this.defaultTTL, namespace?: string): Promise<void> {
+	async set<T>(
+		key: string,
+		value: T,
+		ttl = this.defaultTTL,
+		namespace?: string,
+	): Promise<void> {
 		if (this.versioning) {
 			const firstLevel = this.levels[0];
 
 			if (!firstLevel) {
-				throw new Error("set: Failed to find first cache level")
+				throw new Error("set: Failed to find first cache level");
 			}
 
 			const versionedLevel = new VersionManager(firstLevel);
-			
-			const currentVersion = await versionedLevel.getCurrentVersion(namespace ?? key);
+
+			const currentVersion = await versionedLevel.getCurrentVersion(
+				namespace ?? key,
+			);
 
 			await Promise.allSettled(
 				this.levels.map((level) => {
@@ -93,7 +114,10 @@ export class CacheService {
 						return currentLevel.setWithVersion(key, value, currentVersion, ttl);
 					} catch (e) {
 						// Gracefully catch set errors, so we can move to next level
-						console.warn("Failed to setWithVersion, gracefully continuing with next level.", e);
+						console.warn(
+							"Failed to setWithVersion, gracefully continuing with next level.",
+							e,
+						);
 						return Promise.reject(e);
 					}
 				}),
@@ -108,11 +132,14 @@ export class CacheService {
 					return level.set<T>(key, value, ttl);
 				} catch (e) {
 					// Gracefully catch set errors, so we can move to next level
-					console.warn("Failed to set, gracefully continuing with next level.", e)
+					console.warn(
+						"Failed to set, gracefully continuing with next level.",
+						e,
+					);
 					return Promise.reject(e);
 				}
 			}),
-		);		
+		);
 	}
 
 	/**
@@ -120,22 +147,25 @@ export class CacheService {
 	 * @param key - key to delete
 	 */
 	async del(key: string, namespace?: string): Promise<void> {
-			await Promise.allSettled(
-				this.levels.map((level) => {
-					try {
-						if (this.versioning) {
-							const versionedLevel = new VersionManager(level);
-							return versionedLevel.del(key, namespace);
-						}
-						return level.del(key);
-					} catch (e) {
-						console.warn("Failed to delete key, gracefully continuing with next level.", e);
-						return Promise.reject(e);
+		await Promise.allSettled(
+			this.levels.map((level) => {
+				try {
+					if (this.versioning) {
+						const versionedLevel = new VersionManager(level);
+						return versionedLevel.del(key, namespace);
 					}
-				}),
-			);
-			return;
-		}
+					return level.del(key);
+				} catch (e) {
+					console.warn(
+						"Failed to delete key, gracefully continuing with next level.",
+						e,
+					);
+					return Promise.reject(e);
+				}
+			}),
+		);
+		return;
+	}
 
 	/**
 	 * Invalidates given key via increment

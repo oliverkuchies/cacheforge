@@ -8,7 +8,7 @@ export class VersionManager {
 
 	/**
 	 * @description Get the current version for a given key
-	 * @param key 
+	 * @param key
 	 * @returns {Promise<number>} current version
 	 */
 	async getCurrentVersion(key: string): Promise<number> {
@@ -26,8 +26,8 @@ export class VersionManager {
 		}
 	}
 
-	private buildLookupKey(key : string, version : number) {
-		if (isNaN(version)) {
+	private buildLookupKey(key: string, version: number) {
+		if (Number.isNaN(version)) {
 			version = 1;
 		}
 
@@ -36,8 +36,8 @@ export class VersionManager {
 
 	/**
 	 * @description Get the versioned key lookup for a given key
-	 * @param key 
-	 * @param namespace 
+	 * @param key
+	 * @param namespace
 	 * @returns {Promise<string>} versioned key
 	 */
 	async getOrSetVersionedKeyLookup(
@@ -50,7 +50,7 @@ export class VersionManager {
 
 	/**
 	 * @description Invalidate the current version for a given key
-	 * @param key 
+	 * @param key
 	 * @returns {Promise<number>} new version
 	 */
 	async invalidate(key: string): Promise<number> {
@@ -69,7 +69,7 @@ export class VersionManager {
 		version: number,
 		value?: (() => Promise<T>) | T,
 		ttl?: number,
-		namespace?: string
+		namespace?: string,
 	) {
 		const versionedKey = this.buildLookupKey(key, version);
 		return this.level.get(versionedKey, value, ttl, namespace);
@@ -77,10 +77,10 @@ export class VersionManager {
 
 	/**
 	 * Set with version to prevent extra lookup latency
-	 * @param key 
-	 * @param value 
-	 * @param version 
-	 * @param ttl 
+	 * @param key
+	 * @param value
+	 * @param version
+	 * @param ttl
 	 */
 	async setWithVersion<T>(
 		key: string,
@@ -111,15 +111,10 @@ export class VersionManager {
 		return this.level.get<T>(versionedKey, value, ttl);
 	}
 
-	async set<T>(
-		key: string,
-		value: T,
-		ttl?: number,
-		namespace?: string,
-	) {
+	async set<T>(key: string, value: T, ttl?: number, namespace?: string) {
 		const versionedKey = await this.getOrSetVersionedKeyLookup(key, namespace);
 		await this.level.set<T>(versionedKey, value, ttl);
-		
+
 		const version = this.retrieveVersionFromKey(versionedKey);
 		return version;
 	}
