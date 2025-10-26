@@ -173,14 +173,14 @@ export class CacheService {
 	 * @throws Error - if invalidation fails, not handled intentionally.
 	 */
 	async invalidateKey(key: string): Promise<void> {
-		await Promise.allSettled(
-			this.levels.map((level) => {
-				if (this.versioning) {
-					const versionedLevel = new VersionManager(level);
-					return versionedLevel.invalidate(key);
-				}
-			}),
-		);
+		const promises = [];
+		if (this.versioning) {
+			for (const level of this.levels) {
+				const versionedLevel = new VersionManager(level);
+				promises.push(versionedLevel.invalidate(key));
+			}
+		}
+		await Promise.allSettled(promises);
 	}
 
 	/**
