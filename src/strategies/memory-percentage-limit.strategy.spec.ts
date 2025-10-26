@@ -1,4 +1,4 @@
-import { describe, expect, it, vitest } from "vitest";
+import { describe, expect, it } from "vitest";
 import { MemoryCacheLevel, type StoredHeapItem } from "../levels";
 import { FirstExpiringMemoryPolicy } from "../policies/first-expiring-memory.policy";
 import { MemoryPercentageLimitStrategy } from "./memory-percentage-limit.strategy";

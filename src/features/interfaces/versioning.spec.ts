@@ -1,12 +1,14 @@
 import { faker } from "@faker-js/faker";
-import { RedisContainer } from "@testcontainers/redis";
+import {
+	RedisContainer,
+	type StartedRedisContainer,
+} from "@testcontainers/redis";
 import Redis from "ioredis";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { RedisCacheLevel } from "../../levels";
-import { generateVersionLookupKey } from "../../utils/version.utils";
 import { VersionManager } from "../version-manager";
 
-let redisContainer: any;
+let redisContainer: StartedRedisContainer;
 let redisCache: RedisCacheLevel;
 let client: Redis;
 
@@ -38,7 +40,8 @@ describe("Versioning Interface", () => {
 		const testValue = faker.string.alpha(10);
 		const versionManager = new VersionManager(redisCache);
 
-		await versionManager.set(testKey, testValue);
+		const version = await versionManager.set(testKey, testValue);
+        expect(version).toBe('1');
 		const retrievedValue = await versionManager.get<string>(testKey);
 		expect(retrievedValue).toBe(testValue);
 

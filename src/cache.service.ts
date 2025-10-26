@@ -27,19 +27,42 @@ export class CacheService {
 	 * Loop through cache levels to get the value for the given key
 	 * @param key - cache key
 	 * @returns cached value or null if not found
+	 * @param valueGetter - function to get the value if not present in cache
+	 * @param ttl - time to live in seconds
+	 * @param namespace - used to group related cache entries for easier invalidation
 	 */
-	async get<T>(key: string): Promise<T | null> {
-		for (const level of this.levels) {
-			let value: T | null;
-			if (this.versioning) {
-				const versionedLevel = new VersionManager(level);
-				value = await versionedLevel.get<T>(key);
-			} else {
-				value = await level.get<T>(key);
+	async get<T>(
+		key: string,
+		valueGetter?: () => Promise<T>,
+		ttl?: number,
+		namespace?: string,
+	): Promise<T | null> {
+		if (this.versioning) {
+			const firstLevel = this.levels[0];
+			if (!firstLevel) {
+				throw new Error("set: Failed to find first cache level");
 			}
+			const versionedLevel = new VersionManager(firstLevel);
+			const currentVersion = await versionedLevel.getCurrentVersion(namespace ?? key);
+			for (const level of this.levels) {
+				try {
+					const currentVersionedLevel = new VersionManager(level);
+					return await currentVersionedLevel.getWithVersion<T>(key, currentVersion, valueGetter, ttl, namespace);
+				} catch (e) {
+					console.warn("Failed to getWithVersion, gracefully continuing with next level.", e);
+				}
+			}
+			return null;
+		}
 
-			if (value !== null && value !== undefined) {
-				return value;
+		for (const level of this.levels) {
+			try {
+				const value = await level.get<T>(key, valueGetter, ttl);
+				if (value !== undefined && value !== null) {
+					return value;
+				}
+			} catch (e) {
+				console.warn("Failed to get, gracefully continuing with next level.", e);
 			}
 		}
 		return null;
@@ -51,30 +74,81 @@ export class CacheService {
 	 * @param value - value to cache
 	 * @param ttl - time to live in seconds
 	 */
-	async set<T>(key: string, value: T, ttl = this.defaultTTL): Promise<void> {
+	async set<T>(key: string, value: T, ttl = this.defaultTTL, namespace?: string): Promise<void> {
+		if (this.versioning) {
+			const firstLevel = this.levels[0];
+
+			if (!firstLevel) {
+				throw new Error("set: Failed to find first cache level")
+			}
+
+			const versionedLevel = new VersionManager(firstLevel);
+			
+			const currentVersion = await versionedLevel.getCurrentVersion(namespace ?? key);
+
+			await Promise.allSettled(
+				this.levels.map((level) => {
+					try {
+						const currentLevel = new VersionManager(level);
+						return currentLevel.setWithVersion(key, value, currentVersion, ttl);
+					} catch (e) {
+						// Gracefully catch set errors, so we can move to next level
+						console.warn("Failed to setWithVersion, gracefully continuing with next level.", e);
+						return Promise.reject(e);
+					}
+				}),
+			);
+
+			return;
+		}
+
 		await Promise.allSettled(
 			this.levels.map((level) => {
-				if (this.versioning) {
-					const versionedLevel = new VersionManager(level);
-					return versionedLevel.set<T>(key, value, ttl);
+				try {
+					return level.set<T>(key, value, ttl);
+				} catch (e) {
+					// Gracefully catch set errors, so we can move to next level
+					console.warn("Failed to set, gracefully continuing with next level.", e)
+					return Promise.reject(e);
 				}
-				return level.set<T>(key, value, ttl);
 			}),
-		);
+		);		
 	}
 
 	/**
 	 * Delete the value for the given key from all cache levels
 	 * @param key - key to delete
 	 */
-	async del(key: string): Promise<void> {
+	async del(key: string, namespace?: string): Promise<void> {
+			await Promise.allSettled(
+				this.levels.map((level) => {
+					try {
+						if (this.versioning) {
+							const versionedLevel = new VersionManager(level);
+							return versionedLevel.del(key, namespace);
+						}
+						return level.del(key);
+					} catch (e) {
+						console.warn("Failed to delete key, gracefully continuing with next level.", e);
+						return Promise.reject(e);
+					}
+				}),
+			);
+			return;
+		}
+
+	/**
+	 * Invalidates given key via increment
+	 * @param key - key to invalidate
+	 * @throws Error - if invalidation fails, not handled intentionally.
+	 */
+	async invalidateKey(key: string): Promise<void> {
 		await Promise.allSettled(
 			this.levels.map((level) => {
 				if (this.versioning) {
 					const versionedLevel = new VersionManager(level);
-					return versionedLevel.del(key);
+					return versionedLevel.invalidate(key);
 				}
-				return level.del(key);
 			}),
 		);
 	}

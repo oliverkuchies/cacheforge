@@ -1,10 +1,13 @@
 import { faker, fakerZH_TW } from "@faker-js/faker";
-import { RedisContainer } from "@testcontainers/redis";
+import {
+	RedisContainer,
+	type StartedRedisContainer,
+} from "@testcontainers/redis";
 import { Redis } from "ioredis";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { RedisCacheLevel } from "./redis.level";
 
-let redisContainer: any;
+let redisContainer: StartedRedisContainer;
 let redisCache: RedisCacheLevel;
 let client: Redis;
 
@@ -16,8 +19,8 @@ describe("RedisCacheLevel (single node)", () => {
 	});
 
 	afterAll(async () => {
-		await client.disconnect();
-		await redisContainer.stop();
+		await client?.disconnect();
+		await redisContainer?.stop();
 	});
 
 	it("connection should be established", async () => {

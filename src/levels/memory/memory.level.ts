@@ -1,4 +1,4 @@
-import os from "os";
+import os from "node:os";
 import { DEFAULT_TTL } from "../../constants";
 import type { MemoryEvictionPolicy } from "../../policies/memory-eviction.policy";
 import type { MemoryManagementStrategy } from "../../strategies/interfaces/memory-management-strategy";
@@ -38,7 +38,6 @@ export class MemoryCacheLevel
 		key: string,
 		value?: (() => Promise<T>) | T,
 		ttl?: number,
-		namespace?: string,
 	): Promise<T | null> {
 		const cachedValue = this.store.get(key) as StoredItem | undefined;
 		if (cachedValue === null || cachedValue === undefined) {

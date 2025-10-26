@@ -116,6 +116,4 @@ MIT
 ---
 
 **TODOs:**
-- Check namespace implementation
 - When the application hits Redis, ensure the value is cached in the memory layer
-- Better error handling
