@@ -8,7 +8,7 @@
 
 It utilises a leveling framework, which ensures that Level 1 is hit before Level 2 in cache. 
 
-For instance, I would prefer that my customers hit Level 1, instead of Level 2. Level 1 could be an in memory cache which is faster to read, and ensures less load on Level 2 (which may be Redis, Valkey etc).
+For instance, one may prefer that their services hit level 1 cache, instead of level 2 cache. Level 1 could be an in memory cache which is faster to read, and ensures less load on level 2 (which may be Redis, Valkey etc).
 
 ## Features
 
