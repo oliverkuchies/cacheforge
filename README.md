@@ -51,10 +51,12 @@ npm install multicache ioredis
 Here's a minimal example to get you started:
 
 ```typescript
-import { CacheService } from 'multicache';
-import { MemoryCacheLevel } from 'multicache';
-import { FirstExpiringMemoryPolicy } from 'multicache';
-import { MemoryPercentageLimitStrategy } from 'multicache';
+import {
+  CacheService,
+  MemoryCacheLevel,
+  FirstExpiringMemoryPolicy,
+  MemoryPercentageLimitStrategy
+} from 'multicache';
 
 // Create memory cache with eviction policy and strategy
 const memoryCache = new MemoryCacheLevel({
@@ -73,6 +75,8 @@ await cache.set('user:123', { name: 'John Doe', email: 'john@example.com' });
 const user = await cache.get('user:123');
 console.log(user); // { name: 'John Doe', email: 'john@example.com' }
 ```
+
+> **💡 Tip:** Check out the [examples directory](examples/) for more usage patterns including versioning, multi-level caching, and custom implementations.
 
 ## Core Concepts
 
