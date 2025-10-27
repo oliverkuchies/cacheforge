@@ -1,9 +1,9 @@
 import type { MemoryCacheLevel } from "../levels/memory/memory.level";
-import { MemoryEvictionPolicy } from "./memory-eviction.policy";
+import { AbstractMemoryEvictionPolicy } from "./abstract/abstract-memory-eviction.policy";
 
 const EVICTION_PERCENTAGE = 0.1;
 
-export class FirstExpiringMemoryPolicy extends MemoryEvictionPolicy {
+export class FirstExpiringMemoryPolicy extends AbstractMemoryEvictionPolicy {
 	async evict(cacheLevel: MemoryCacheLevel): Promise<void> {
 		const heap = cacheLevel.getHeap();
 		const heapSize = heap.getCount();
