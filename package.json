@@ -1,4 +1,17 @@
 {
+	"name": "multicache",
+	"version": "1.0.0",
+	"description": "A multi-level caching library for Node.js applications, supporting in-memory and Redis, and custom cache levels.",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"tags": [
+		"cache",
+		"multilevel",
+		"redis",
+		"in-memory",
+		"typescript",
+		"nodejs"
+	],
 	"dependencies": {
 		"@datastructures-js/heap": "^4.3.7",
 		"@sesamecare-oss/redlock": "^1.4.0",
