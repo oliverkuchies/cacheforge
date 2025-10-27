@@ -6,7 +6,7 @@
 
 **Multicache** is a flexible, multi-level cache library for Node.js and TypeScript that combines the speed of in-memory caching with the persistence of Redis. Built with extensibility in mind, it features pluggable eviction policies, memory management strategies, and safe versioning for cache invalidation.
 
-It utilises a levelling framework, which ensures that Level 1 is hit before Level 2 in cache. 
+It utilises a leveling framework, which ensures that Level 1 is hit before Level 2 in cache. 
 
 For instance, I would prefer that my customers hit Level 1, instead of Level 2. Level 1 could be an in memory cache which is faster to read, and ensures less load on Level 2 (which may be Redis, Valkey etc).
 
