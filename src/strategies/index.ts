@@ -1,1 +1,1 @@
-export * from './memory-percentage-limit.strategy';
+export * from "./memory-percentage-limit.strategy";
