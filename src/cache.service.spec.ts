@@ -436,7 +436,7 @@ describe("Cache Service with multiple levels and versioning", () => {
 		expect(erroringLevel.del).toHaveBeenCalledWith("key:1");
 	});
 
-	it('should backfill higher cache levels when a lower level has the data', async () => {
+	it("should backfill higher cache levels when a lower level has the data", async () => {
 		const cacheKey = faker.string.alpha(10);
 		const value = faker.string.alpha(10);
 
@@ -450,7 +450,7 @@ describe("Cache Service with multiple levels and versioning", () => {
 			retrievedValue,
 			"Retrieved value should match the original value from Redis",
 		).toBe(value);
-		
+
 		// Now check if the value has been backfilled to the memory level (higher level)
 		const memoryValue = await memoryLevel.get(`${cacheKey}:1`);
 		expect(

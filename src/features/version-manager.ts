@@ -1,10 +1,11 @@
 import type { CacheLevel } from "../levels/interfaces/cache-level";
+import { handleGracefully } from "../utils/error.utils";
 import { generateVersionLookupKey } from "../utils/version.utils";
 
 const SEVEN_DAYS_IN_SECONDS = 3600 * 24 * 7;
 
 export class VersionManager {
-	constructor(private level: CacheLevel) {}
+	constructor(private level: CacheLevel) {}		
 
 	/**
 	 * @description Get the current version for a given key
@@ -21,7 +22,15 @@ export class VersionManager {
 			);
 			return Number(value);
 		} catch (e) {
-			console.error("Failed to get version. Falling back to 1. Exception: ", e);
+			// TODO - improve version handling mechanism
+			console.error("Failed to get version. Falling back to 1 and deleting stale cache. Exception: ", e);
+			
+			await handleGracefully(
+				() => this.level.del(generateVersionLookupKey(key)),
+				"Failed to delete stale version key",
+				true
+			);
+
 			return 1;
 		}
 	}
