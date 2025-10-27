@@ -14,5 +14,14 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.MemoryPercentageLimitStrategy = void 0;
+// Core service
 __exportStar(require("./cache.service"), exports);
+// Cache levels
+__exportStar(require("./levels"), exports);
+// Eviction policies
+__exportStar(require("./policies"), exports);
+// Memory management strategies
+var memory_percentage_limit_strategy_1 = require("./strategies/memory-percentage-limit.strategy");
+Object.defineProperty(exports, "MemoryPercentageLimitStrategy", { enumerable: true, get: function () { return memory_percentage_limit_strategy_1.MemoryPercentageLimitStrategy; } });
 //# sourceMappingURL=index.js.map
