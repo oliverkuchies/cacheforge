@@ -1,14 +1,14 @@
 {
-  "compilerOptions": {
-    "sourceRoot": "./src",
-    "module": "nodenext",
-    "target": "esnext",
-    "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "strict": true,
-    "skipLibCheck": true,
-  }
+	"compilerOptions": {
+		"sourceRoot": "./src",
+		"module": "nodenext",
+		"target": "esnext",
+		"sourceMap": true,
+		"declaration": true,
+		"declarationMap": true,
+		"noUncheckedIndexedAccess": true,
+		"exactOptionalPropertyTypes": true,
+		"strict": true,
+		"skipLibCheck": true
+	}
 }
