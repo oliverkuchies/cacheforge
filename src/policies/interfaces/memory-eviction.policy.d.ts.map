@@ -1,0 +1,1 @@
+{"version":3,"file":"memory-eviction.policy.d.ts","sourceRoot":"./src/","sources":["src/policies/interfaces/memory-eviction.policy.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,QAAQ,EAAE,MAAM,mCAAmC,CAAC;AAElE,MAAM,WAAW,oBAAoB,CAAC,CAAC;IACtC,KAAK,CAAC,UAAU,EAAE,QAAQ,CAAC,CAAC,CAAC,GAAG,IAAI,CAAC;CACrC"}

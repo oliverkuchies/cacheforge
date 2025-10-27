@@ -1,0 +1,1 @@
+{"version":3,"file":"memory.d.ts","sourceRoot":"./src/","sources":["src/strategies/interfaces/memory.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,QAAQ,EAAE,MAAM,mCAAmC,CAAC;AAElE,MAAM,WAAW,cAAc,CAAC,CAAC;IAChC,cAAc,CAAC,MAAM,EAAE,QAAQ,CAAC,CAAC,CAAC,GAAG,OAAO,CAAC;CAC7C"}

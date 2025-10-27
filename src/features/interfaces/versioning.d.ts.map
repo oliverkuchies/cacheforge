@@ -1,0 +1,1 @@
+{"version":3,"file":"versioning.d.ts","sourceRoot":"./src/","sources":["src/features/interfaces/versioning.ts"],"names":[],"mappings":"AAAA,MAAM,WAAW,UAAU;IAC1B,eAAe,CAAC,GAAG,EAAE,MAAM,EAAE,SAAS,CAAC,EAAE,MAAM,GAAG,OAAO,CAAC,MAAM,CAAC,CAAC;IAClE,iBAAiB,CAAC,GAAG,EAAE,MAAM,GAAG,OAAO,CAAC,MAAM,CAAC,CAAC;IAChD,UAAU,CAAC,GAAG,EAAE,MAAM,GAAG,OAAO,CAAC,IAAI,CAAC,CAAC;CACvC"}

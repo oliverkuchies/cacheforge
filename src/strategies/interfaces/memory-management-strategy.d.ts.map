@@ -1,0 +1,1 @@
+{"version":3,"file":"memory-management-strategy.d.ts","sourceRoot":"./src/","sources":["src/strategies/interfaces/memory-management-strategy.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,QAAQ,EAAE,MAAM,mCAAmC,CAAC;AAElE,MAAM,WAAW,wBAAwB,CAAC,CAAC;IAC1C,cAAc,CAAC,MAAM,EAAE,QAAQ,CAAC,CAAC,CAAC,GAAG,OAAO,CAAC;CAC7C"}

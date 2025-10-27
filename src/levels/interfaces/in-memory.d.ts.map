@@ -1,0 +1,1 @@
+{"version":3,"file":"in-memory.d.ts","sourceRoot":"./src/","sources":["src/levels/interfaces/in-memory.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,UAAU,EAAE,MAAM,wBAAwB,CAAC;AAEzD,MAAM,WAAW,QAAQ,CAAC,CAAC;IAC1B;;;OAGG;IACH,cAAc,IAAI,MAAM,CAAC;IAEzB;;;OAGG;IACH,OAAO,IAAI,UAAU,CAAC,CAAC,CAAC,CAAC;CACzB"}
