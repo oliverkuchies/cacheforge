@@ -114,6 +114,3 @@ Contributions are always welcome! Found a bug, have an idea, or want to add a ne
 MIT
 
 ---
-
-**TODOs:**
-- When the application hits Redis, ensure the value is cached in the memory layer
