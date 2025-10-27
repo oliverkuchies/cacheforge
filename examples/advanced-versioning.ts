@@ -2,6 +2,9 @@
  * Advanced Multicache example with versioning
  * 
  * Run this file with: npx tsx examples/advanced-versioning.ts
+ * 
+ * Note: When using multicache in your project, import from 'multicache':
+ * import { CacheService, MemoryCacheLevel, ... } from 'multicache';
  */
 
 import {
@@ -9,7 +12,7 @@ import {
   MemoryCacheLevel,
   FirstExpiringMemoryPolicy,
   MemoryPercentageLimitStrategy
-} from '../src';
+} from '../src'; // In production, use: from 'multicache'
 
 async function main() {
   console.log('🚀 Advanced Multicache Example - Versioning\n');

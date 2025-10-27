@@ -2,13 +2,17 @@
 
 This directory contains practical examples demonstrating various features of Multicache.
 
-## Running Examples
+## Prerequisites
 
-All examples can be run using `tsx`:
+These examples use [tsx](https://github.com/privatenumber/tsx) to run TypeScript directly. Install it globally or use npx:
 
 ```bash
+# Using npx (no installation needed)
 npx tsx examples/basic-usage.ts
-npx tsx examples/advanced-versioning.ts
+
+# Or install globally
+npm install -g tsx
+tsx examples/basic-usage.ts
 ```
 
 ## Available Examples
@@ -51,7 +55,7 @@ import {
   MemoryCacheLevel,
   FirstExpiringMemoryPolicy,
   MemoryPercentageLimitStrategy
-} from '../src';
+} from 'multicache';
 
 async function main() {
   const cache = new CacheService({
