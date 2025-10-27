@@ -46,37 +46,91 @@ export class CacheService {
 			const currentVersion = await versionedLevel.getCurrentVersion(
 				namespace ?? key,
 			);
+			let failedLevels: CacheLevel[] = [];
 			for (const level of this.levels) {
 				try {
 					const currentVersionedLevel = new VersionManager(level);
-					return await currentVersionedLevel.getWithVersion<T>(
+					const response = await currentVersionedLevel.getWithVersion<T>(
 						key,
 						currentVersion,
 						valueGetter,
 						ttl,
 						namespace,
 					);
+
+					if (response !== undefined && response !== null) {
+						// Backfill failed levels
+						if (failedLevels.length > 0) {
+							await Promise.allSettled(
+								failedLevels.map((failedLevel) => {
+									try {
+										const failedVersionedLevel =
+											new VersionManager(failedLevel);
+										return failedVersionedLevel.setWithVersion(
+											key,
+											response,
+											currentVersion,
+											ttl,
+										);
+									} catch (e) {
+										// Gracefully catch set errors, so we can move to next level
+										console.warn(
+											"Failed to backfill setWithVersion, gracefully continuing with next level.",
+											e,
+										);
+										return Promise.reject(e);
+									}
+								}),
+							);
+						}
+
+						return response;
+					} else {
+						failedLevels.push(level);
+					}
 				} catch (e) {
 					console.warn(
 						"Failed to getWithVersion, gracefully continuing with next level.",
 						e,
 					);
+
+					failedLevels.push(level);
 				}
 			}
 			return null;
 		}
 
+		let failedLevels: CacheLevel[] = [];
 		for (const level of this.levels) {
 			try {
 				const value = await level.get<T>(key, valueGetter, ttl);
 				if (value !== undefined && value !== null) {
+					// Backfill failed levels
+					if (failedLevels.length > 0) {
+						await Promise.allSettled(
+							failedLevels.map((failedLevel) => {
+								try {
+									return failedLevel.set(key, value, ttl);
+								} catch (e) {
+									console.warn(
+										"Failed to backfill set, gracefully continuing with next level.",
+										e,
+									);
+									return Promise.reject(e);
+								}
+							})
+						);
+					}
 					return value;
+				} else {
+					failedLevels.push(level);
 				}
 			} catch (e) {
 				console.warn(
 					"Failed to get, gracefully continuing with next level.",
 					e,
 				);
+				failedLevels.push(level);
 			}
 		}
 		return null;

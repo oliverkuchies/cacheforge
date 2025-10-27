@@ -133,7 +133,7 @@ describe("Cache Service with multiple levels and versioning", () => {
 
 		// Now we will invalidate, and it should be undefined
 		await versionedCacheService.invalidateKey(cacheKey);
-		expect(await versionedCacheService.get(cacheKey)).toBe(undefined);
+		expect(await versionedCacheService.get(cacheKey)).toBe(null);
 	});
 
 	it("should delete versioned data from all cache levels", async () => {
@@ -312,7 +312,7 @@ describe("Cache Service with multiple levels and versioning", () => {
 				3600,
 				namespace,
 			),
-		).toBe(undefined);
+		).toBe(null);
 	});
 
 	it("should return the values from redis if memory fails in non-versioned cache", async () => {
@@ -434,5 +434,28 @@ describe("Cache Service with multiple levels and versioning", () => {
 
 		await expect(service.del("key")).resolves.toBeUndefined();
 		expect(erroringLevel.del).toHaveBeenCalledWith("key:1");
+	});
+
+	it('should backfill higher cache levels when a lower level has the data', async () => {
+		const cacheKey = faker.string.alpha(10);
+		const value = faker.string.alpha(10);
+
+		// Directly set the value in the Redis level (lower level)
+		await redisCache.set(`${cacheKey}:1`, value, 3600);
+
+		// Now attempt to get the value via the versioned cache service
+		const retrievedValue = await versionedCacheService.get<string>(cacheKey);
+
+		expect(
+			retrievedValue,
+			"Retrieved value should match the original value from Redis",
+		).toBe(value);
+		
+		// Now check if the value has been backfilled to the memory level (higher level)
+		const memoryValue = await memoryLevel.get(`${cacheKey}:1`);
+		expect(
+			memoryValue,
+			"Memory cache should have been backfilled with the value",
+		).toBe(value);
 	});
 });
