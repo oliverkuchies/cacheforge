@@ -31,10 +31,14 @@ export class MemoryCacheLevel
 		this.registerMemoryChangeListener(options);
 	}
 
-	private registerMemoryChangeListener(options: MemoryLevelOptions<StoredHeapItem>) {
+	private registerMemoryChangeListener(
+		options: MemoryLevelOptions<StoredHeapItem>,
+	) {
 		MemoryEventManager.onMemoryChange(() => {
 			if (
-				options.memoryStrategies.find((strategy) => strategy.checkCondition(this))
+				options.memoryStrategies.find((strategy) =>
+					strategy.checkCondition(this),
+				)
 			) {
 				options.evictionPolicy.evict(this);
 			}
@@ -71,7 +75,7 @@ export class MemoryCacheLevel
 		}
 		return cachedValue.value as T;
 	}
-	set<T>(key: string, value: T, ttl: number = DEFAULT_TTL): Promise<T | null> {		
+	set<T>(key: string, value: T, ttl: number = DEFAULT_TTL): Promise<T | null> {
 		const expiryDate = Date.now() + ttl;
 
 		const storedItem = { value, expiry: expiryDate };

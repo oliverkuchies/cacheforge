@@ -146,11 +146,13 @@ export class CacheService {
 
 		await Promise.allSettled(
 			this.levels.map((level) => {
-				return handleGracefully(() => level.set<T>(key, value, ttl), "Failed to set key in cache level");
+				return handleGracefully(
+					() => level.set<T>(key, value, ttl),
+					"Failed to set key in cache level",
+				);
 			}),
 		);
 	}
-
 
 	/**
 	 * Delete the value for the given key from all cache levels
@@ -158,17 +160,18 @@ export class CacheService {
 	 */
 	async del(key: string, namespace?: string): Promise<void> {
 		await Promise.allSettled(
-			this.levels.map(async (level) =>
-				await handleGracefully(async () => {
-					if (this.versioning) {
-						const versionedLevel = new VersionManager(level);
-						return versionedLevel.del(key, namespace);
-					}
-					return level.del(key);
-				}, "Failed to delete key from cache level"),
-			)		
+			this.levels.map(
+				async (level) =>
+					await handleGracefully(async () => {
+						if (this.versioning) {
+							const versionedLevel = new VersionManager(level);
+							return versionedLevel.del(key, namespace);
+						}
+						return level.del(key);
+					}, "Failed to delete key from cache level"),
+			),
 		);
-		
+
 		return;
 	}
 
