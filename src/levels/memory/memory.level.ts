@@ -6,6 +6,7 @@ import { createCacheHeap } from "../../utils/heap.utils";
 import type { CacheLevel } from "../interfaces/cache-level";
 import type { InMemory } from "../interfaces/in-memory";
 import type { Purgable } from "../interfaces/purgable";
+import { MemoryEventManager } from "./memory-event.manager";
 export interface StoredItem {
 	value: unknown;
 	expiry: number;
@@ -27,11 +28,31 @@ export class MemoryCacheLevel
 	protected heap = createCacheHeap<StoredHeapItem>((item) => item.expiry);
 
 	constructor(options: MemoryLevelOptions<StoredHeapItem>) {
-		if (
-			options.memoryStrategies.some((strategy) => strategy.checkCondition(this))
-		) {
-			options.evictionPolicy.evict(this);
-		}
+		this.registerMemoryChangeListener(options);
+	}
+
+	private registerMemoryChangeListener(
+		options: MemoryLevelOptions<StoredHeapItem>,
+	) {
+		MemoryEventManager.onMemoryChange(() => {
+			if (
+				options.memoryStrategies.find((strategy) =>
+					strategy.checkCondition(this),
+				)
+			) {
+				options.evictionPolicy.evict(this);
+			}
+		});
+	}
+
+	private insertHeapItem(item: StoredHeapItem) {
+		this.heap.insert(item);
+	}
+
+	private updateStore(key: string, item: StoredItem) {
+		MemoryEventManager.triggerMemoryChange();
+		this.store.set(key, item);
+		this.insertHeapItem({ ...item, key });
 	}
 
 	async get<T>(
@@ -58,10 +79,7 @@ export class MemoryCacheLevel
 		const expiryDate = Date.now() + ttl;
 
 		const storedItem = { value, expiry: expiryDate };
-		const heapItem: StoredHeapItem = { key, ...storedItem };
-
-		this.store.set(key, storedItem);
-		this.heap.insert(heapItem);
+		this.updateStore(key, storedItem);
 
 		return Promise.resolve(value as T);
 	}

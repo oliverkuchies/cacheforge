@@ -2,6 +2,11 @@ import { DEFAULT_LOCK_TTL, DEFAULT_TTL } from "./constants";
 import { VersionManager } from "./features/version-manager";
 import type { CacheLevel } from "./levels/interfaces/cache-level";
 import type { Lockable } from "./levels/interfaces/lockable";
+import {
+	backfillLevels,
+	backfillVersionedLevels,
+} from "./utils/backfill.utils";
+import { handleGracefully } from "./utils/error.utils";
 
 interface CacheServiceOptions {
 	levels: CacheLevel[];
@@ -46,37 +51,57 @@ export class CacheService {
 			const currentVersion = await versionedLevel.getCurrentVersion(
 				namespace ?? key,
 			);
+			const failedLevels: CacheLevel[] = [];
 			for (const level of this.levels) {
 				try {
 					const currentVersionedLevel = new VersionManager(level);
-					return await currentVersionedLevel.getWithVersion<T>(
+					const versionedValue = await currentVersionedLevel.getWithVersion<T>(
 						key,
 						currentVersion,
 						valueGetter,
 						ttl,
 						namespace,
 					);
+
+					if (versionedValue !== undefined && versionedValue !== null) {
+						await backfillVersionedLevels(
+							failedLevels,
+							key,
+							versionedValue,
+							currentVersion,
+							ttl,
+						);
+						return versionedValue;
+					} else {
+						failedLevels.push(level);
+					}
 				} catch (e) {
 					console.warn(
 						"Failed to getWithVersion, gracefully continuing with next level.",
 						e,
 					);
+					failedLevels.push(level);
 				}
 			}
 			return null;
 		}
 
+		const failedLevels: CacheLevel[] = [];
 		for (const level of this.levels) {
 			try {
 				const value = await level.get<T>(key, valueGetter, ttl);
 				if (value !== undefined && value !== null) {
+					await backfillLevels(failedLevels, key, value, ttl);
 					return value;
+				} else {
+					failedLevels.push(level);
 				}
 			} catch (e) {
 				console.warn(
 					"Failed to get, gracefully continuing with next level.",
 					e,
 				);
+				failedLevels.push(level);
 			}
 		}
 		return null;
@@ -109,17 +134,10 @@ export class CacheService {
 
 			await Promise.allSettled(
 				this.levels.map((level) => {
-					try {
+					return handleGracefully(async () => {
 						const currentLevel = new VersionManager(level);
 						return currentLevel.setWithVersion(key, value, currentVersion, ttl);
-					} catch (e) {
-						// Gracefully catch set errors, so we can move to next level
-						console.warn(
-							"Failed to setWithVersion, gracefully continuing with next level.",
-							e,
-						);
-						return Promise.reject(e);
-					}
+					}, "Failed to setWithVersion, gracefully continuing with next level.");
 				}),
 			);
 
@@ -128,16 +146,10 @@ export class CacheService {
 
 		await Promise.allSettled(
 			this.levels.map((level) => {
-				try {
-					return level.set<T>(key, value, ttl);
-				} catch (e) {
-					// Gracefully catch set errors, so we can move to next level
-					console.warn(
-						"Failed to set, gracefully continuing with next level.",
-						e,
-					);
-					return Promise.reject(e);
-				}
+				return handleGracefully(
+					() => level.set<T>(key, value, ttl),
+					"Failed to set key in cache level",
+				);
 			}),
 		);
 	}
@@ -148,22 +160,18 @@ export class CacheService {
 	 */
 	async del(key: string, namespace?: string): Promise<void> {
 		await Promise.allSettled(
-			this.levels.map((level) => {
-				try {
-					if (this.versioning) {
-						const versionedLevel = new VersionManager(level);
-						return versionedLevel.del(key, namespace);
-					}
-					return level.del(key);
-				} catch (e) {
-					console.warn(
-						"Failed to delete key, gracefully continuing with next level.",
-						e,
-					);
-					return Promise.reject(e);
-				}
-			}),
+			this.levels.map(
+				async (level) =>
+					await handleGracefully(async () => {
+						if (this.versioning) {
+							const versionedLevel = new VersionManager(level);
+							return versionedLevel.del(key, namespace);
+						}
+						return level.del(key);
+					}, "Failed to delete key from cache level"),
+			),
 		);
+
 		return;
 	}
 
