@@ -1,5 +1,5 @@
 {
-	"name": "multicache",
+	"name": "cacheforge",
 	"version": "1.0.0",
 	"description": "A multi-level caching library for Node.js applications, supporting in-memory and Redis, and custom cache levels.",
 	"main": "dist/index.js",

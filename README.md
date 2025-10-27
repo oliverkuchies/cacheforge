@@ -1,10 +1,10 @@
-[![npm version](https://img.shields.io/npm/v/multicache.svg)](https://www.npmjs.com/package/multicache)
-[![Build Status](https://github.com/oliverkuchies/multicache/actions/workflows/main.yml/badge.svg)](https://github.com/oliverkuchies/multicache/actions)
+[![npm version](https://img.shields.io/npm/v/cacheforge.svg)](https://www.npmjs.com/package/cacheforge)
+[![Build Status](https://github.com/oliverkuchies/cacheforge/actions/workflows/main.yml/badge.svg)](https://github.com/oliverkuchies/cacheforge/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-# Multicache
+# cacheforge
 
-**Multicache** is a flexible, multi-level cache library for Node.js and TypeScript that combines the speed of in-memory caching with the persistence of Redis. Built with extensibility in mind, it features pluggable eviction policies, memory management strategies, and safe versioning for cache invalidation.
+**cacheforge** is a flexible, multi-level cache library for Node.js and TypeScript that combines the speed of in-memory caching with the persistence of Redis. Built with extensibility in mind, it features pluggable eviction policies, memory management strategies, and safe versioning for cache invalidation.
 
 It utilises a leveling framework, which ensures that Level 1 is hit before Level 2 in cache. 
 
@@ -47,7 +47,7 @@ For instance, I would prefer that my customers hit Level 1, instead of Level 2. 
 ## Installation
 
 ```bash
-npm install multicache ioredis
+npm install cacheforge ioredis
 ```
 
 **Note:** `ioredis` is required if you plan to use the Redis cache level. For memory-only caching, it can be omitted.
@@ -62,7 +62,7 @@ import {
   MemoryCacheLevel,
   FirstExpiringMemoryPolicy,
   MemoryPercentageLimitStrategy
-} from 'multicache';
+} from 'cacheforge';
 
 // Create memory cache with eviction policy and strategy
 const memoryCache = new MemoryCacheLevel({
@@ -86,7 +86,7 @@ console.log(user); // { name: 'John Doe', email: 'john@example.com' }
 
 ### Cache Levels
 
-Cache levels represent different storage backends in your caching hierarchy. Multicache queries levels in order and returns the first hit, promoting cache locality.
+Cache levels represent different storage backends in your caching hierarchy. cacheforge queries levels in order and returns the first hit, promoting cache locality.
 
 **Built-in Levels:**
 
@@ -94,7 +94,7 @@ Cache levels represent different storage backends in your caching hierarchy. Mul
 Fast, in-memory caching using a Map and min-heap for efficient expiration tracking.
 
 ```typescript
-import { MemoryCacheLevel, FirstExpiringMemoryPolicy, MemoryPercentageLimitStrategy } from 'multicache';
+import { MemoryCacheLevel, FirstExpiringMemoryPolicy, MemoryPercentageLimitStrategy } from 'cacheforge';
 
 const memoryCache = new MemoryCacheLevel({
   memoryStrategies: [
@@ -108,7 +108,7 @@ const memoryCache = new MemoryCacheLevel({
 Persistent caching backed by Redis with support for distributed locking.
 
 ```typescript
-import { RedisCacheLevel } from 'multicache';
+import { RedisCacheLevel } from 'cacheforge';
 import Redis from 'ioredis';
 
 const redisClient = new Redis({
@@ -127,7 +127,7 @@ Eviction policies determine which items to remove when memory constraints are ex
 Removes items closest to expiration first (10% of cache at a time).
 
 ```typescript
-import { FirstExpiringMemoryPolicy } from 'multicache';
+import { FirstExpiringMemoryPolicy } from 'cacheforge';
 
 const policy = new FirstExpiringMemoryPolicy();
 ```
@@ -140,7 +140,7 @@ Strategies check conditions and trigger eviction policies when thresholds are me
 Triggers eviction when system memory usage exceeds a percentage threshold.
 
 ```typescript
-import { MemoryPercentageLimitStrategy } from 'multicache';
+import { MemoryPercentageLimitStrategy } from 'cacheforge';
 
 // Trigger eviction at 80% memory usage
 const strategy = new MemoryPercentageLimitStrategy(80);
@@ -158,7 +158,7 @@ import {
   MemoryCacheLevel,
   FirstExpiringMemoryPolicy,
   MemoryPercentageLimitStrategy
-} from 'multicache';
+} from 'cacheforge';
 
 const cache = new CacheService({
   levels: [
@@ -194,7 +194,7 @@ import {
   RedisCacheLevel,
   FirstExpiringMemoryPolicy,
   MemoryPercentageLimitStrategy
-} from 'multicache';
+} from 'cacheforge';
 import Redis from 'ioredis';
 
 const memoryCache = new MemoryCacheLevel({
@@ -221,7 +221,7 @@ const product = await cache.get('product:42');
 Versioning enables safe cache invalidation across distributed systems by appending version numbers to cache keys.
 
 ```typescript
-import { CacheService, MemoryCacheLevel, RedisCacheLevel } from 'multicache';
+import { CacheService, MemoryCacheLevel, RedisCacheLevel } from 'cacheforge';
 import Redis from 'ioredis';
 
 const cache = new CacheService({
@@ -256,7 +256,7 @@ const staleUser = await cache.get('user:123'); // Returns null
 Prevent race conditions in distributed systems with Redis-based locks.
 
 ```typescript
-import { CacheService, RedisCacheLevel } from 'multicache';
+import { CacheService, RedisCacheLevel } from 'cacheforge';
 import Redis from 'ioredis';
 
 const cache = new CacheService({
@@ -303,7 +303,7 @@ const user = await cache.get(
 Implement the `CacheLevel` interface to add support for new backends (filesystem, database, etc.):
 
 ```typescript
-import type { CacheLevel } from 'multicache';
+import type { CacheLevel } from 'cacheforge';
 
 export class FilesystemCacheLevel implements CacheLevel {
   constructor(private basePath: string) {}
@@ -367,8 +367,8 @@ const cache = new CacheService({
 Create policies with different eviction algorithms (LRU, LFU, random, etc.):
 
 ```typescript
-import type { MemoryEvictionPolicy } from 'multicache';
-import type { InMemory } from 'multicache';
+import type { MemoryEvictionPolicy } from 'cacheforge';
+import type { InMemory } from 'cacheforge';
 
 export class LRUEvictionPolicy<T> implements MemoryEvictionPolicy<T> {
   private accessOrder = new Map<string, number>();
@@ -401,8 +401,8 @@ export class LRUEvictionPolicy<T> implements MemoryEvictionPolicy<T> {
 Build strategies based on item count, memory size, or custom metrics:
 
 ```typescript
-import type { MemoryManagementStrategy } from 'multicache';
-import type { InMemory } from 'multicache';
+import type { MemoryManagementStrategy } from 'cacheforge';
+import type { InMemory } from 'cacheforge';
 
 export class ItemCountLimitStrategy<T> implements MemoryManagementStrategy<T> {
   constructor(private maxItems: number) {}
@@ -564,7 +564,7 @@ await cache.lock('key', callback, 1); // Lock may expire during execution
 
 ### 6. Error Handling
 
-Multicache fails gracefully—if one level fails, it continues to the next. Always handle cache misses:
+cacheforge fails gracefully—if one level fails, it continues to the next. Always handle cache misses:
 
 ```typescript
 const data = await cache.get('key') || await fetchFromDatabase();
@@ -572,7 +572,7 @@ const data = await cache.get('key') || await fetchFromDatabase();
 
 ## Testing
 
-Multicache uses [Vitest](https://vitest.dev/) and [Testcontainers](https://www.testcontainers.org/) for comprehensive testing.
+cacheforge uses [Vitest](https://vitest.dev/) and [Testcontainers](https://www.testcontainers.org/) for comprehensive testing.
 
 ### Run Tests
 
@@ -599,7 +599,7 @@ Example test using the library:
 
 ```typescript
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { CacheService, MemoryCacheLevel, FirstExpiringMemoryPolicy, MemoryPercentageLimitStrategy } from 'multicache';
+import { CacheService, MemoryCacheLevel, FirstExpiringMemoryPolicy, MemoryPercentageLimitStrategy } from 'cacheforge';
 
 describe('Cache Service', () => {
   let cache: CacheService;
@@ -642,8 +642,8 @@ Contributions are welcome! Here's how to get started:
 ### Development Setup
 
 ```bash
-git clone https://github.com/oliverkuchies/multicache.git
-cd multicache
+git clone https://github.com/oliverkuchies/cacheforge.git
+cd cacheforge
 npm install
 npm run build
 npm test
