@@ -1,12 +1,12 @@
 import os from "node:os";
 import { DEFAULT_TTL } from "../../constants";
-import type { MemoryEvictionPolicy } from "../../policies/memory-eviction.policy";
 import type { MemoryManagementStrategy } from "../../strategies/interfaces/memory-management-strategy";
 import { createCacheHeap } from "../../utils/heap.utils";
 import type { CacheLevel } from "../interfaces/cache-level";
 import type { InMemory } from "../interfaces/in-memory";
 import type { Purgable } from "../interfaces/purgable";
 import { MemoryEventManager } from "./memory-event.manager";
+import { AbstractMemoryEvictionPolicy } from "../../policies/abstract/abstract-memory-eviction.policy";
 export interface StoredItem {
 	value: unknown;
 	expiry: number;
@@ -18,7 +18,7 @@ export interface StoredHeapItem extends StoredItem {
 
 interface MemoryLevelOptions<T> {
 	memoryStrategies: MemoryManagementStrategy<T>[];
-	evictionPolicy: MemoryEvictionPolicy;
+	evictionPolicy: AbstractMemoryEvictionPolicy;
 }
 
 export class MemoryCacheLevel
