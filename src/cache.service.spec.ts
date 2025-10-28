@@ -124,7 +124,7 @@ describe("Cache Service with multiple levels and versioning", () => {
 			value,
 		);
 
-		const cacheServiceValue = await versionedCacheService.get(cacheKey);
+		const cacheServiceValue = await versionedCacheService.get(cacheKey, null);
 
 		expect(
 			cacheServiceValue,
@@ -133,7 +133,7 @@ describe("Cache Service with multiple levels and versioning", () => {
 
 		// Now we will invalidate, and it should be undefined
 		await versionedCacheService.invalidateKey(cacheKey);
-		expect(await versionedCacheService.get(cacheKey)).toBe(null);
+		expect(await versionedCacheService.get(cacheKey, null)).toBe(null);
 	});
 
 	it("should delete versioned data from all cache levels", async () => {
@@ -162,7 +162,7 @@ describe("Cache Service with multiple levels and versioning", () => {
 
 		await cacheService.set(cacheKey, value);
 
-		const retrievedValue = await cacheService.get<string>(cacheKey);
+		const retrievedValue = await cacheService.get<string>(cacheKey, '0');
 
 		expect(
 			retrievedValue,
@@ -212,8 +212,10 @@ describe("Cache Service with multiple levels and versioning", () => {
 	it("should return null for non-existent keys", async () => {
 		const cacheKey = faker.string.alpha(10);
 
-		const retrievedValue = await cacheService.get<string>(cacheKey);
-		expect(retrievedValue).toBeNull();
+		const retrievedValue = await cacheService.get<string>(cacheKey, async () => {
+			return Promise.resolve("0");
+		});
+		expect(retrievedValue).toBe('0');
 	});
 
 	it("should throwing a locking exception if all levels do not support locking", async () => {
@@ -245,7 +247,7 @@ describe("Cache Service with multiple levels and versioning", () => {
 
 		expect(retrievedValue).toBe(testValue);
 
-		const cachedValue = await cacheService.get<number>(testKey);
+		const cachedValue = await cacheService.get<number>(testKey, 0);
 		expect(cachedValue).toBe(testValue);
 	});
 
@@ -444,7 +446,7 @@ describe("Cache Service with multiple levels and versioning", () => {
 		await redisCache.set(`${cacheKey}:1`, value, 3600);
 
 		// Now attempt to get the value via the versioned cache service
-		const retrievedValue = await versionedCacheService.get<string>(cacheKey);
+		const retrievedValue = await versionedCacheService.get<string>(cacheKey, 'bananas');
 
 		expect(
 			retrievedValue,
