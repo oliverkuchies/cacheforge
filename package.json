@@ -1,6 +1,6 @@
 {
 	"name": "cacheforge",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"description": "A multi-level caching library for Node.js applications, supporting in-memory and Redis, and custom cache levels.",
 	"main": "dist/src/index.js",
 	"types": "dist/src/index.d.ts",
@@ -14,8 +14,7 @@
 	],
 	"dependencies": {
 		"@datastructures-js/heap": "^4.3.7",
-		"@sesamecare-oss/redlock": "^1.4.0",
-		"ioredis": "^5.8.1"
+		"@sesamecare-oss/redlock": "^1.4.0"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.3.0",
@@ -25,6 +24,9 @@
 		"testcontainers": "^11.7.1",
 		"typescript": "^5.9.3",
 		"vitest": "^3.2.4"
+	},
+	"peerDependencies": {
+		"ioredis": ">=5.0.0"
 	},
 	"scripts": {
 		"test": "vitest --coverage",

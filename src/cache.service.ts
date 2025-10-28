@@ -38,7 +38,7 @@ export class CacheService {
 	 */
 	async get<T>(
 		key: string,
-		valueGetter?: () => Promise<T>,
+		valueGetter: (() => Promise<T>) | T,
 		ttl?: number,
 		namespace?: string,
 	): Promise<T | null> {
@@ -83,7 +83,12 @@ export class CacheService {
 					failedLevels.push(level);
 				}
 			}
-			return null;
+
+			if (valueGetter instanceof Function) {
+				return await valueGetter();
+			}
+
+			return valueGetter;
 		}
 
 		const failedLevels: CacheLevel[] = [];
@@ -104,7 +109,12 @@ export class CacheService {
 				failedLevels.push(level);
 			}
 		}
-		return null;
+
+		if (valueGetter instanceof Function) {
+			return await valueGetter();
+		}
+
+		return valueGetter;
 	}
 
 	/**
