@@ -299,7 +299,7 @@ describe("Cache Service with multiple levels and versioning", () => {
 		expect(
 			await faultyFirstLevelVersionedCacheService.get(
 				cacheKey,
-				undefined,
+				null,
 				3600,
 				namespace,
 			),
@@ -310,7 +310,7 @@ describe("Cache Service with multiple levels and versioning", () => {
 		expect(
 			await faultyFirstLevelVersionedCacheService.get(
 				cacheKey,
-				undefined,
+				null,
 				3600,
 				namespace,
 			),
@@ -358,7 +358,7 @@ describe("Cache Service with multiple levels and versioning", () => {
 		expect(
 			await allFaultyLevelsCacheService.get(
 				cacheKey,
-				undefined,
+				null,
 				3600,
 				namespace,
 			),
@@ -366,7 +366,7 @@ describe("Cache Service with multiple levels and versioning", () => {
 		expect(
 			await allFaultyLevelsVersionedCacheService.get(
 				cacheKey,
-				undefined,
+				null,
 				3600,
 				namespace,
 			),
