@@ -41,7 +41,7 @@ export class CacheService {
 		valueGetter: (() => Promise<T>) | T,
 		ttl?: number,
 		namespace?: string,
-	): Promise<T | null> {
+	): Promise<T> {
 		if (this.versioning) {
 			const firstLevel = this.levels[0];
 			if (!firstLevel) {
