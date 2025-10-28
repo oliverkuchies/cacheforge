@@ -5,11 +5,17 @@
 
 # cacheforge
 
-**cacheforge** is a flexible, multi-level cache library for Node.js and TypeScript that combines the speed of in-memory caching with the persistence of Redis. Built with extensibility in mind, it features pluggable eviction policies, memory management strategies, and safe versioning for cache invalidation.
+**cacheforge** is a flexible, multi-level cache library for Node.js and TypeScript that combines the speed of in-memory caching with the persistence of Redis. 
 
-It utilises a leveling framework, which ensures that Level 1 is hit before Level 2 in cache. 
+Built with extensibility in mind, it features pluggable eviction policies, memory management strategies, and safe versioning for cache invalidation.
 
-For instance, one may prefer that their services hit level 1 cache, instead of level 2 cache. Level 1 could be an in memory cache which is faster to read, and ensures less load on level 2 (which may be Redis, Valkey etc).
+It utilizes a leveling framework, ensuring that Level 1 is always accessed before Level 2 in the cache hierarchy.
+For example, a service may be configured to check the Level 1 cache first before querying Level 2.
+
+- Level 1 might be an in-memory cache, offering faster reads and reducing latency.
+- Level 2 could be a remote cache such as Redis or Valkey, which serves as a secondary layer when data is not found in Level 1.
+
+This approach reduces load on the lower-level cache and improves overall performance.
 
 ## Features
 
