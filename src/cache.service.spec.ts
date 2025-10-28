@@ -162,7 +162,7 @@ describe("Cache Service with multiple levels and versioning", () => {
 
 		await cacheService.set(cacheKey, value);
 
-		const retrievedValue = await cacheService.get<string>(cacheKey, '0');
+		const retrievedValue = await cacheService.get<string>(cacheKey, "0");
 
 		expect(
 			retrievedValue,
@@ -212,10 +212,13 @@ describe("Cache Service with multiple levels and versioning", () => {
 	it("should return null for non-existent keys", async () => {
 		const cacheKey = faker.string.alpha(10);
 
-		const retrievedValue = await cacheService.get<string>(cacheKey, async () => {
-			return Promise.resolve("0");
-		});
-		expect(retrievedValue).toBe('0');
+		const retrievedValue = await cacheService.get<string>(
+			cacheKey,
+			async () => {
+				return Promise.resolve("0");
+			},
+		);
+		expect(retrievedValue).toBe("0");
 	});
 
 	it("should throwing a locking exception if all levels do not support locking", async () => {
@@ -356,12 +359,7 @@ describe("Cache Service with multiple levels and versioning", () => {
 		);
 
 		expect(
-			await allFaultyLevelsCacheService.get(
-				cacheKey,
-				null,
-				3600,
-				namespace,
-			),
+			await allFaultyLevelsCacheService.get(cacheKey, null, 3600, namespace),
 		).toBe(null);
 		expect(
 			await allFaultyLevelsVersionedCacheService.get(
@@ -452,7 +450,10 @@ describe("Cache Service with multiple levels and versioning", () => {
 		expect(await memoryLevel.get(`${cacheKey}:1`)).toBeUndefined();
 
 		// Now attempt to get the value via the versioned cache service
-		const retrievedValue = await versionedCacheService.get<string>(cacheKey, 'bananas');
+		const retrievedValue = await versionedCacheService.get<string>(
+			cacheKey,
+			"bananas",
+		);
 
 		expect(
 			retrievedValue,
