@@ -1,6 +1,4 @@
 node_modules
 coverage
 dist
-*.d.ts
-*.js
-*.js.map
+.DS_Store

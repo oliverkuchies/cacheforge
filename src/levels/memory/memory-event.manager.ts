@@ -1,21 +1,19 @@
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 
-export class MemoryEventManager {
-	private static emitter = new EventEmitter();
+const emitter = new EventEmitter();
 
-	static subscribe(event: string, listener: () => void): void {
-		MemoryEventManager.emitter.on(event, listener);
-	}
+export function subscribe(event: string, listener: () => void): void {
+	emitter.on(event, listener);
+}
 
-	static emit(event: string): void {
-		MemoryEventManager.emitter.emit(event);
-	}
+export function emit(event: string): void {
+	emitter.emit(event);
+}
 
-	static onMemoryChange(listener: () => void): void {
-		MemoryEventManager.subscribe("memoryChange", listener);
-	}
+export function onMemoryChange(listener: () => void): void {
+	subscribe("memoryChange", listener);
+}
 
-	static triggerMemoryChange(): void {
-		MemoryEventManager.emit("memoryChange");
-	}
+export function triggerMemoryChange(): void {
+	emit("memoryChange");
 }
