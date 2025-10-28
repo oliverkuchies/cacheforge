@@ -6,7 +6,7 @@ import { createCacheHeap } from "../../utils/heap.utils";
 import type { CacheLevel } from "../interfaces/cache-level";
 import type { InMemory } from "../interfaces/in-memory";
 import type { Purgable } from "../interfaces/purgable";
-import { MemoryEventManager } from "./memory-event.manager";
+import { onMemoryChange, triggerMemoryChange } from "./memory-event.manager";
 export interface StoredItem {
 	value: unknown;
 	expiry: number;
@@ -34,7 +34,7 @@ export class MemoryCacheLevel
 	private registerMemoryChangeListener(
 		options: MemoryLevelOptions<StoredHeapItem>,
 	) {
-		MemoryEventManager.onMemoryChange(() => {
+		onMemoryChange(() => {
 			if (
 				options.memoryStrategies.find((strategy) =>
 					strategy.checkCondition(this),
@@ -50,7 +50,7 @@ export class MemoryCacheLevel
 	}
 
 	private updateStore(key: string, item: StoredItem) {
-		MemoryEventManager.triggerMemoryChange();
+		triggerMemoryChange();
 		this.store.set(key, item);
 		this.insertHeapItem({ ...item, key });
 	}

@@ -1,6 +1,6 @@
 {
 	"name": "cacheforge",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "A multi-level caching library for Node.js applications, supporting in-memory and Redis, and custom cache levels.",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -31,7 +31,7 @@
 		"typecheck": "tsc --noEmit",
 		"build": "tsc",
 		"lint": "biome check ./src",
-		"lint:fix": "biome format ./src --write && biome check ./src --fix",
+		"lint:fix": "biome format ./src --write && biome check ./src --write --unsafe",
 		"prepare": "npm run build"
 	}
 }

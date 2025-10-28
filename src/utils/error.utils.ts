@@ -3,7 +3,7 @@ export async function handleGracefully<T>(
 	errorMessage: string,
 	suppressError: boolean = false,
 	onError?: (e: Error) => void,
-): Promise<T | void> {
+): Promise<T | undefined> {
 	try {
 		const result = await fn();
 		return result as T;
@@ -13,8 +13,9 @@ export async function handleGracefully<T>(
 		onError?.(e as Error);
 
 		if (suppressError) {
-			return Promise.resolve();
+			return Promise.resolve(undefined);
 		}
+
 		return Promise.reject(e);
 	}
 }
