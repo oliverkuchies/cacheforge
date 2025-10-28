@@ -12,7 +12,7 @@ export interface CacheLevel {
 		value?: (() => Promise<T>) | T,
 		ttl?: number,
 		namespace?: string,
-	): Promise<T | null>;
+	): Promise<T>;
 	/**
 	 * Store a value in the cache.
 	 * @param key The cache key.

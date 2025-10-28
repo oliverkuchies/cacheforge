@@ -22,8 +22,7 @@ interface MemoryLevelOptions<T> {
 }
 
 export class MemoryCacheLevel
-	implements CacheLevel, Purgable, InMemory<StoredHeapItem>
-{
+	implements CacheLevel, Purgable, InMemory<StoredHeapItem> {
 	protected store = new Map<string, StoredItem>();
 	protected heap = createCacheHeap<StoredHeapItem>((item) => item.expiry);
 
@@ -59,7 +58,7 @@ export class MemoryCacheLevel
 		key: string,
 		value?: (() => Promise<T>) | T,
 		ttl?: number,
-	): Promise<T | null> {
+	): Promise<T> {
 		const cachedValue = this.store.get(key) as StoredItem | undefined;
 		if (cachedValue === null || cachedValue === undefined) {
 			let newValue: unknown;
@@ -75,7 +74,7 @@ export class MemoryCacheLevel
 		}
 		return cachedValue.value as T;
 	}
-	set<T>(key: string, value: T, ttl: number = DEFAULT_TTL): Promise<T | null> {
+	set<T>(key: string, value: T, ttl: number = DEFAULT_TTL): Promise<T> {
 		const expiryDate = Date.now() + ttl;
 
 		const storedItem = { value, expiry: expiryDate };
