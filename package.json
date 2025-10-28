@@ -1,9 +1,9 @@
 {
 	"name": "cacheforge",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"description": "A multi-level caching library for Node.js applications, supporting in-memory and Redis, and custom cache levels.",
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"main": "dist/src/index.js",
+	"types": "dist/src/index.d.ts",
 	"tags": [
 		"cache",
 		"multilevel",
