@@ -445,6 +445,12 @@ describe("Cache Service with multiple levels and versioning", () => {
 		// Directly set the value in the Redis level (lower level)
 		await redisCache.set(`${cacheKey}:1`, value, 3600);
 
+		// Expect redisCache to have the value
+		expect(await redisCache.get(`${cacheKey}:1`)).toBe(value);
+
+		// Ensure memory level does not have the value initially
+		expect(await memoryLevel.get(`${cacheKey}:1`)).toBeUndefined();
+
 		// Now attempt to get the value via the versioned cache service
 		const retrievedValue = await versionedCacheService.get<string>(cacheKey, 'bananas');
 
