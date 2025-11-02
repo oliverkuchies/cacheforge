@@ -1,5 +1,5 @@
 import { faker, fakerZH_TW } from "@faker-js/faker";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { generateJSONData } from "../../../tests/utilities/data.utilities";
 import { FirstExpiringMemoryPolicy } from "../../policies";
 import { MemoryPercentageLimitStrategy } from "../../strategies/memory-percentage-limit.strategy";
@@ -98,6 +98,33 @@ describe("should successfully store data, and retrieve it on demand", async () =
 
 		expect(retrievedValue).toEqual(testValue);
 	});
+
+	it("should mget and mdel", async () => {
+		const bingo1 = faker.number.bigInt();
+		const bingo2 = faker.number.bigInt();
+		const bingo3 = faker.number.bigInt();
+
+		await cacheEngine.set("bingo", bingo1);
+		await cacheEngine.set("bingo1", bingo2);
+		await cacheEngine.set("bingo2", bingo3);
+		const multiValues = await cacheEngine.mget<number>([
+			"bingo",
+			"bingo1",
+			"bingo2",
+		]);
+
+		// Compare as strings to handle BigInt/Number serialization differences
+		expect(multiValues.map(String)).toEqual(
+			[bingo1, bingo2, bingo3].map(String),
+		);
+
+		// Now delete them
+		await cacheEngine.mdel(["bingo", "bingo1", "bingo2"]);
+
+		expect(
+			await cacheEngine.mget<number>(["bingo", "bingo1", "bingo2"]),
+		).toEqual([undefined, undefined, undefined]);
+	});
 });
 
 describe("It should successfully manage the application memory usage", () => {
@@ -126,34 +153,28 @@ describe("It should successfully manage the application memory usage", () => {
 		expect(executionTimeLarge / INSERT_AMOUNT).toBeLessThan(1);
 	});
 
-	it("should run get operations with fallback async function if cache miss occurs", async () => {
-		const testKey = faker.string.alpha(10);
-		const testValue = faker.string.alpha(20);
-		const fallbackFunction = async () => {
-			return testValue;
-		};
-		const retrievedValue = await cacheEngine.get<string>(
-			testKey,
-			fallbackFunction,
-		);
-
-		expect(retrievedValue).toEqual(testValue);
-	});
-
-	it("should run get operations with fallback direct value if cache miss occurs", async () => {
-		const testKey = faker.string.alpha(10);
-		const testValue = faker.string.alpha(20);
-
-		const retrievedValue = await cacheEngine.get<string>(testKey, testValue);
-
-		expect(retrievedValue).toEqual(testValue);
-	});
-
 	it("should return undefined if no fallback provided and cache miss occurs", async () => {
 		const testKey = faker.string.alpha(10);
 
 		const retrievedValue = await cacheEngine.get<string>(testKey);
 
 		expect(retrievedValue).toBeUndefined();
+	});
+
+	it("should expire as expected", async () => {
+		vi.useFakeTimers();
+		const delSpy = vi.spyOn(cacheEngine, "del");
+
+		await cacheEngine.set<string>("valid", "test bananas", 3600);
+
+		expect(await cacheEngine.get<string>("valid")).toBe("test bananas");
+
+		await cacheEngine.set<string>("expired", "bingo", -3600);
+
+		vi.runAllTimers();
+
+		expect(delSpy).toHaveBeenCalledWith("expired");
+
+		expect(await cacheEngine.get<string>("expired")).toBe(undefined);
 	});
 });

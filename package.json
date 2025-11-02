@@ -14,7 +14,8 @@
 	],
 	"dependencies": {
 		"@datastructures-js/heap": "^4.3.7",
-		"@sesamecare-oss/redlock": "^1.4.0"
+		"@sesamecare-oss/redlock": "^1.4.0",
+		"json-with-bigint": "^3.4.4"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.3.0",
@@ -30,6 +31,7 @@
 	},
 	"scripts": {
 		"test": "vitest --coverage",
+		"test:debug": "vitest --inspect-brk --no-file-parallelism",
 		"typecheck": "tsc --noEmit",
 		"build": "tsc",
 		"lint": "biome check ./src",

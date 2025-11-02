@@ -47,6 +47,6 @@ describe("Versioning Interface", () => {
 
 		await versionManager.invalidate(testKey);
 		const newRetrievedValue = await versionManager.get<string>(testKey);
-		expect(newRetrievedValue).toBe(undefined);
+		expect(newRetrievedValue).toBe(null);
 	});
 });

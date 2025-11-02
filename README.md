@@ -95,6 +95,8 @@ console.log(user); // { name: 'John Doe', email: 'john@example.com' }
 
 Cache levels represent different storage backends in your caching hierarchy. cacheforge queries levels in order and returns the first hit, promoting cache locality.
 
+At the top (CacheService), fallbacks are handled. However the added layers do not have fallback logic to reduce complexity.
+
 **Built-in Levels:**
 
 #### MemoryCacheLevel
