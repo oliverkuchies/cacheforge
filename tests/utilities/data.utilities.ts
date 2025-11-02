@@ -6,7 +6,7 @@ export async function generateJSONData(
 	recordNum: number,
 ) {
 	for (let i = 0; i < recordNum; i++) {
-		const randomTTL = Math.floor(Math.random() * 3600) + 1;
+		const randomTTL = Date.now() + Math.floor(Math.random() * 3600) + 1;
 		await cacheLevel.set(
 			`key${i}`,
 			{

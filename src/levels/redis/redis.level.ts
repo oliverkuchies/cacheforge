@@ -3,6 +3,10 @@ import type IoRedis from "ioredis";
 import type { Cluster } from "ioredis";
 import { DEFAULT_TTL } from "../../constants";
 import { parseIfJSON } from "../../utils/cache.utils";
+import {
+	deserializeFromRedis,
+	serializeForRedis,
+} from "../../utils/parsing.utils";
 import { generateVersionLookupKey } from "../../utils/version.utils";
 import type { CacheLevel } from "../interfaces/cache-level";
 import type { Lockable } from "../interfaces/lockable";
@@ -22,42 +26,43 @@ export class RedisCacheLevel implements CacheLevel, Lockable {
 	 * @param namespace - used to group related cache entries for easier invalidation
 	 * @returns
 	 */
-	async get<T>(
-		key: string,
-		value?: (() => Promise<T>) | T,
-		ttl?: number,
-	): Promise<T> {
+	async get<T>(key: string): Promise<T> {
 		const cachedValue = (await this.client.get(key)) as T;
-
-		if (cachedValue === null || cachedValue === undefined) {
-			let newValue: unknown;
-
-			if (value instanceof Function) {
-				newValue = await value();
-			} else {
-				newValue = value;
-			}
-
-			await this.set(key, newValue, ttl);
-			return newValue as T;
-		}
 
 		return parseIfJSON<T>(cachedValue);
 	}
 
+	async mget<T>(keys: string[]): Promise<T[]> {
+		const results = await this.client.mget(...keys);
+		const finalResults: T[] = [];
+
+		for (let i = 0; i < keys.length; i++) {
+			const cachedValue = results[i] as never;
+
+			if (cachedValue === null || cachedValue === undefined) {
+				finalResults.push(undefined as T);
+			} else {
+				finalResults.push(deserializeFromRedis(cachedValue));
+			}
+		}
+
+		return finalResults;
+	}
+
 	async set<T>(key: string, value: T, ttl = DEFAULT_TTL) {
-		await this.client.set(key, JSON.stringify(value), "EX", ttl);
+		await this.client.set(key, serializeForRedis(value), "EX", ttl);
 
 		return parseIfJSON(value) as T;
 	}
 
 	async del(key: string) {
-		// delete versioned key
 		await this.client.del(key);
-
-		// delete version lookup key
 		const versionKey = generateVersionLookupKey(key);
 		await this.client.del(versionKey);
+	}
+
+	async mdel(keys: string[]) {
+		await this.client.del(...keys);
 	}
 
 	async lock<T>(key: string, callback: () => Promise<T>, ttl = 30): Promise<T> {

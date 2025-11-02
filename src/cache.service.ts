@@ -71,7 +71,7 @@ export class CacheService {
 							currentVersion,
 							ttl,
 						);
-						return versionedValue;
+						return versionedValue as T;
 					} else {
 						failedLevels.push(level);
 					}
@@ -84,17 +84,22 @@ export class CacheService {
 				}
 			}
 
+			let newValue = valueGetter;
+
 			if (valueGetter instanceof Function) {
-				return await valueGetter();
+				newValue = await valueGetter();
+
+				await this.set(key, newValue, ttl, namespace);
 			}
 
-			return valueGetter;
+			return newValue as T;
 		}
 
 		const failedLevels: CacheLevel[] = [];
 		for (const level of this.levels) {
 			try {
-				const value = await level.get<T>(key, valueGetter, ttl);
+				const value = await level.get<T>(key);
+
 				if (value !== undefined && value !== null) {
 					await backfillLevels(failedLevels, key, value, ttl);
 					return value;
@@ -110,11 +115,14 @@ export class CacheService {
 			}
 		}
 
+		let newValue = valueGetter;
 		if (valueGetter instanceof Function) {
-			return await valueGetter();
+			newValue = await valueGetter();
 		}
 
-		return valueGetter;
+		await this.set(key, newValue, ttl, namespace);
+
+		return newValue as T;
 	}
 
 	/**

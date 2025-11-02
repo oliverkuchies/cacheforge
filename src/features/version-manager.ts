@@ -15,14 +15,15 @@ export class VersionManager {
 	async getCurrentVersion(key: string): Promise<number> {
 		try {
 			const versionKey = generateVersionLookupKey(key);
-			const value = await this.level.get<number>(
-				versionKey,
-				1,
-				SEVEN_DAYS_IN_SECONDS,
-			);
+			const value = await this.level.get<number>(versionKey);
+
+			if (!value) {
+				await this.level.set(versionKey, 1, SEVEN_DAYS_IN_SECONDS);
+				return 1;
+			}
+
 			return Number(value);
 		} catch (e) {
-			// TODO - improve version handling mechanism
 			console.error(
 				"Failed to get version. Falling back to 1 and deleting stale cache. Exception: ",
 				e,
@@ -39,10 +40,6 @@ export class VersionManager {
 	}
 
 	private buildLookupKey(key: string, version: number) {
-		if (Number.isNaN(version)) {
-			version = 1;
-		}
-
 		return `${key}:${version}`;
 	}
 
@@ -79,12 +76,12 @@ export class VersionManager {
 	async getWithVersion<T>(
 		key: string,
 		version: number,
-		value?: (() => Promise<T>) | T,
-		ttl?: number,
-		namespace?: string,
+		_value?: (() => Promise<T>) | T,
+		_ttl?: number,
+		_namespace?: string,
 	) {
 		const versionedKey = this.buildLookupKey(key, version);
-		return this.level.get(versionedKey, value, ttl, namespace);
+		return this.level.get(versionedKey);
 	}
 
 	/**
@@ -115,12 +112,12 @@ export class VersionManager {
 	 */
 	async get<T>(
 		key: string,
-		value?: (() => Promise<T>) | T,
-		ttl?: number,
+		_value?: (() => Promise<T>) | T,
+		_ttl?: number,
 		namespace?: string,
 	): Promise<T | null> {
 		const versionedKey = await this.getOrSetVersionedKeyLookup(key, namespace);
-		return this.level.get<T>(versionedKey, value, ttl);
+		return this.level.get<T>(versionedKey);
 	}
 
 	async set<T>(key: string, value: T, ttl?: number, namespace?: string) {

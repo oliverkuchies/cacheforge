@@ -1,18 +1,20 @@
 export interface CacheLevel {
 	/**
-	 * Retrieve a value from the cache.
+	 * Retrieve multiple values from the cache.
 	 * @param key The cache key.
 	 * @param value A function that returns a value or a direct value to cache if the key is not found.
 	 * @param ttl Time to live in seconds.
 	 * @param namespace Used to group related cache entries for easier invalidation.
 	 * @returns The cached value or null if not found.
 	 */
-	get<T>(
-		key: string,
-		value?: (() => Promise<T>) | T,
-		ttl?: number,
-		namespace?: string,
-	): Promise<T>;
+	mget<T>(key: string[], ttl?: number, namespace?: string): Promise<T[]>;
+
+	/**
+	 * Retrieve a value from the cache.
+	 * @param key The cache key.
+	 * @returns The cached value or null if not found.
+	 */
+	get<T>(key: string): Promise<T>;
 	/**
 	 * Store a value in the cache.
 	 * @param key The cache key.
@@ -25,5 +27,11 @@ export interface CacheLevel {
 	 * Delete a value from the cache.
 	 * @param key The cache key.
 	 */
-	del(key: string): Promise<void>;
+	del(key: string | string[]): Promise<void>;
+
+	/**
+	 * Delete multiple values from the cache.
+	 * @param keys The cache keys.
+	 **/
+	mdel(keys: string[]): Promise<void>;
 }

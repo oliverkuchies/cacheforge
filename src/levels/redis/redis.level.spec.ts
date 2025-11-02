@@ -11,7 +11,7 @@ let redisContainer: StartedRedisContainer;
 let redisCache: RedisCacheLevel;
 let client: Redis;
 
-describe("RedisCacheLevel (single node)", () => {
+describe("RedisCacheLevel", () => {
 	beforeAll(async () => {
 		redisContainer = await new RedisContainer("redis:7.2").start();
 		client = new Redis(redisContainer.getConnectionUrl());
@@ -120,7 +120,7 @@ describe("RedisCacheLevel (single node)", () => {
 		expect(retrievedValueBeforeExpiry).toEqual(testValue);
 		await new Promise((resolve) => setTimeout(resolve, 3000));
 		const retrievedValueAfterExpiry = await redisCache.get(testKey);
-		expect(retrievedValueAfterExpiry).toBeUndefined();
+		expect(retrievedValueAfterExpiry).toBeNull();
 	});
 
 	it("should lock and unlock keys correctly", async () => {
@@ -140,20 +140,6 @@ describe("RedisCacheLevel (single node)", () => {
 		expect(result).toBe(42);
 	});
 
-	it("should execute closure to get value if key is missing", async () => {
-		const testKey = faker.string.alpha(10);
-		const testValue = faker.number.int();
-
-		const retrievedValue = await redisCache.get<number>(testKey, async () => {
-			return testValue;
-		});
-
-		expect(retrievedValue).toBe(testValue);
-
-		const cachedValue = await redisCache.get<number>(testKey);
-		expect(cachedValue).toBe(testValue);
-	});
-
 	it("should handle key deletion correctly", async () => {
 		const testKey = faker.string.alpha(10);
 		const testValue = faker.string.alpha(10);
@@ -164,20 +150,33 @@ describe("RedisCacheLevel (single node)", () => {
 
 		await redisCache.del(testKey);
 		const valueAfterDeletion = await redisCache.get(testKey);
-		expect(valueAfterDeletion).toBeUndefined();
+		expect(valueAfterDeletion).toBeNull();
 	});
 
-	it("should execute closure to get value if key is missing", async () => {
-		const testKey = faker.string.alpha(10);
-		const testValue = faker.number.int();
+	it("should mget and mdel", async () => {
+		const bingo1 = faker.number.bigInt();
+		const bingo2 = faker.number.bigInt();
+		const bingo3 = faker.number.bigInt();
 
-		const retrievedValue = await redisCache.get<number>(testKey, async () => {
-			return testValue;
-		});
+		await redisCache.set("bingo", bingo1);
+		await redisCache.set("bingo1", bingo2);
+		await redisCache.set("bingo2", bingo3);
+		const multiValues = await redisCache.mget<number>([
+			"bingo",
+			"bingo1",
+			"bingo2",
+		]);
 
-		expect(retrievedValue).toBe(testValue);
+		// Compare as strings to handle BigInt/Number serialization differences
+		expect(multiValues.map(String)).toEqual(
+			[bingo1, bingo2, bingo3].map(String),
+		);
 
-		const cachedValue = await redisCache.get<number>(testKey);
-		expect(cachedValue).toBe(testValue);
+		// Now delete them
+		await redisCache.mdel(["bingo", "bingo1", "bingo2"]);
+
+		expect(
+			await redisCache.mget<number>(["bingo", "bingo1", "bingo2"]),
+		).toStrictEqual([undefined, undefined, undefined]);
 	});
 });
