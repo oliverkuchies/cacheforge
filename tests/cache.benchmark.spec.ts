@@ -12,20 +12,25 @@ import {
 import { FirstExpiringMemoryPolicy } from "../src/policies/first-expiring-memory.policy";
 import { MemoryPercentageLimitStrategy } from "../src/strategies/memory-percentage-limit.strategy";
 import type { StoredHeapItem } from "../src/levels/memory/memory.level";
-
-interface BenchmarkResult {
-	description: string;
-	totalCalls: number;
-	memoryCacheHits?: number;
-	redisCacheHits?: number;
-	cacheMisses?: number;
-	totalDuration: number;
-	avgLatencyMs: number;
-	p50LatencyMs: number;
-	p95LatencyMs: number;
-	p99LatencyMs: number;
-	throughputOps: number;
-}
+import {
+	type BenchmarkResult,
+	calculateLatencyStats,
+	calculateThroughput,
+	get8020KeyIndex,
+	getUniformKeyIndex,
+	instrumentMemoryCache,
+	instrumentRedisCache,
+	populateCache,
+	runBenchmark,
+} from "./utilities/benchmark.utilities";
+import {
+	printBenchmarkHeader,
+	printBenchmarkResults,
+	printCacheHitRateResults,
+	printMemoryEfficiency,
+	printPerformanceComparison,
+	printWritePerformanceComparison,
+} from "./utilities/benchmark-output.utilities";
 
 const TOTAL_CALLS = 100000;
 
@@ -42,9 +47,7 @@ describe("Cache Performance Benchmarks", () => {
 	});
 
 	it("Benchmark 1: Cache Hit Rate Analysis - 10,000 calls with 80/20 access pattern", async () => {
-		console.log("\n========================================");
-		console.log("BENCHMARK 1: CACHE HIT RATE ANALYSIS");
-		console.log("========================================\n");
+		printBenchmarkHeader("BENCHMARK 1: CACHE HIT RATE ANALYSIS");
 
 		// Create fresh cache instances for this test
 		const redisClient = new Redis(redisContainer.getConnectionUrl());
@@ -59,129 +62,53 @@ describe("Cache Performance Benchmarks", () => {
 		});
 
 		const uniqueKeys = 1000; // Total unique keys
-		const hotKeys = 20; // 20% of keys that will account for 80% of requests
 
 		// Pre-populate cache with data
-		const testData: Record<string, { id: number; data: string }> = {};
-		for (let i = 0; i < uniqueKeys; i++) {
-			const key = `benchmark_key_${i}`;
-			const value = { id: i, data: `test_data_${i}_${"x".repeat(100)}` };
-			testData[key] = value;
-			await multiLevelCache.set(key, value);
-		}
+		await populateCache(multiLevelCache, "benchmark_key", uniqueKeys);
 
 		// Wait a bit to ensure data is properly set
 		await new Promise((resolve) => setTimeout(resolve, 100));
 
-		let memoryCacheHits = 0;
-		let redisCacheHits = 0;
-		let cacheMisses = 0;
+		// Set up hit/miss counters
+		const memoryCacheHits = { count: 0 };
+		const redisCacheHits = { count: 0 };
+		const cacheMisses = { count: 0 };
 
-		// Create instrumented versions to track hits
-		const originalMemoryGet = memoryLevel.get.bind(memoryLevel);
-		const instrumentedMemoryGet = async function <T>(
-			key: string,
-			valueGetter?: (() => Promise<T>) | T,
-			ttl?: number,
-		): Promise<T | null> {
-			const result = await originalMemoryGet(key);
-			if (result !== null && result !== undefined) {
-				memoryCacheHits++;
-			}
-			return result as T;
-		};
-		memoryLevel.get = instrumentedMemoryGet as any;
+		// Instrument cache levels to track hits
+		instrumentMemoryCache(memoryLevel, memoryCacheHits);
+		instrumentRedisCache(redisLevel, redisCacheHits, cacheMisses);
 
-		const originalRedisGet = redisLevel.get.bind(redisLevel);
-		const instrumentedRedisGet = async function <T>(
-			key: string,
-			valueGetter?: (() => Promise<T>) | T,
-			ttl?: number,
-		): Promise<T | null> {
-			const result = await originalRedisGet(key);
-			if (result !== null && result !== undefined) {
-				redisCacheHits++;
-			} else {
-				cacheMisses++;
-			}
-			return result as T;
-		};
-		redisLevel.get = instrumentedRedisGet as any;
-
-		const startTime = Date.now();
-		const latencies: number[] = [];
-
-		// Simulate 80/20 access pattern (80% requests to 20% of keys)
-		for (let i = 0; i < TOTAL_CALLS; i++) {
-			const callStart = Date.now();
-			
-			let keyIndex: number;
-			if (Math.random() < 0.8) {
-				// 80% of requests go to hot keys (0-19)
-				keyIndex = Math.floor(Math.random() * hotKeys);
-			} else {
-				// 20% of requests go to cold keys (20-99)
-				keyIndex = hotKeys + Math.floor(Math.random() * (uniqueKeys - hotKeys));
-			}
-
+		// Run benchmark with 80/20 access pattern
+		const { latencies, totalDuration } = await runBenchmark(async () => {
+			const keyIndex = get8020KeyIndex(uniqueKeys);
 			const key = `benchmark_key_${keyIndex}`;
 			await multiLevelCache.get(key, null);
-			
-			const callEnd = Date.now();
-			latencies.push(callEnd - callStart);
-		}
-
-		const endTime = Date.now();
-		const totalDuration = endTime - startTime;
+		}, TOTAL_CALLS);
 
 		// Calculate statistics
-		latencies.sort((a, b) => a - b);
-		const avgLatency = latencies.reduce((a, b) => a + b, 0) / latencies.length;
-		const p50 = latencies[Math.floor(latencies.length * 0.5)];
-		const p95 = latencies[Math.floor(latencies.length * 0.95)];
-		const p99 = latencies[Math.floor(latencies.length * 0.99)];
-		const throughput = (TOTAL_CALLS / totalDuration) * 1000;
+		const stats = calculateLatencyStats(latencies);
+		const throughput = calculateThroughput(TOTAL_CALLS, totalDuration);
 
 		const result: BenchmarkResult = {
 			description: "Multi-Level Cache with 80/20 Access Pattern",
 			totalCalls: TOTAL_CALLS,
-			memoryCacheHits,
-			redisCacheHits,
-			cacheMisses,
+			memoryCacheHits: memoryCacheHits.count,
+			redisCacheHits: redisCacheHits.count,
+			cacheMisses: cacheMisses.count,
 			totalDuration,
-			avgLatencyMs: avgLatency,
-			p50LatencyMs: p50,
-			p95LatencyMs: p95,
-			p99LatencyMs: p99,
+			...stats,
 			throughputOps: throughput,
 		};
 
 		// Print results
-		console.log("Results:");
-		console.log(`  Total Calls: ${result.totalCalls}`);
-		console.log(`  Memory Cache Hits: ${result.memoryCacheHits} (${((result.memoryCacheHits! / result.totalCalls) * 100).toFixed(2)}%)`);
-		console.log(`  Redis Cache Hits: ${result.redisCacheHits} (${((result.redisCacheHits! / result.totalCalls) * 100).toFixed(2)}%)`);
-		console.log(`  Cache Misses: ${result.cacheMisses} (${((result.cacheMisses! / result.totalCalls) * 100).toFixed(2)}%)`);
-		console.log(`\n  Performance Metrics:`);
-		console.log(`    Total Duration: ${result.totalDuration}ms`);
-		console.log(`    Average Latency: ${result.avgLatencyMs.toFixed(2)}ms`);
-		console.log(`    P50 Latency: ${result.p50LatencyMs}ms`);
-		console.log(`    P95 Latency: ${result.p95LatencyMs}ms`);
-		console.log(`    P99 Latency: ${result.p99LatencyMs}ms`);
-		console.log(`    Throughput: ${result.throughputOps.toFixed(2)} ops/sec`);
-		console.log(`\n  Key Insights:`);
-		console.log(`    - Memory cache prevented ${result.memoryCacheHits} Redis calls`);
-		console.log(`    - That's ${((result.memoryCacheHits! / result.totalCalls) * 100).toFixed(2)}% reduction in Redis load`);
-		console.log(`    - Redis was hit ${result.redisCacheHits} times when memory cache missed\n`);
+		printCacheHitRateResults(result);
 
 		// Cleanup
 		await redisClient.quit();
 	}, 120000);
 
 	it("Benchmark 2: Speed Comparison - Multi-Level vs Redis-Only", async () => {
-		console.log("\n========================================");
-		console.log("BENCHMARK 2: SPEED COMPARISON");
-		console.log("========================================\n");
+		printBenchmarkHeader("BENCHMARK 2: SPEED COMPARISON");
 
 		// Create fresh cache instances for this test
 		const redisClient = new Redis(redisContainer.getConnectionUrl());
@@ -206,103 +133,51 @@ describe("Cache Performance Benchmarks", () => {
 		const uniqueKeys = 100;
 
 		// Pre-populate both caches
-		for (let i = 0; i < uniqueKeys; i++) {
-			const key = `speed_test_key_${i}`;
-			const value = { id: i, data: `test_data_${i}_${"x".repeat(100)}` };
-			await multiLevelCache.set(key, value);
-			await redisOnlyCache.set(key, value);
-		}
+		await populateCache(multiLevelCache, "speed_test_key", uniqueKeys);
+		await populateCache(redisOnlyCache, "speed_test_key", uniqueKeys);
 
 		await new Promise((resolve) => setTimeout(resolve, 100));
 
 		// Benchmark Multi-Level Cache
 		console.log("Testing Multi-Level Cache (Memory + Redis)...");
-		const multiLevelLatencies: number[] = [];
-		const multiLevelStart = Date.now();
-
-		for (let i = 0; i < TOTAL_CALLS; i++) {
-			const keyIndex = Math.floor(Math.random() * uniqueKeys);
+		const multiLevelBenchmark = await runBenchmark(async () => {
+			const keyIndex = getUniformKeyIndex(uniqueKeys);
 			const key = `speed_test_key_${keyIndex}`;
-			
-			const callStart = Date.now();
 			await multiLevelCache.get(key, null);
-			const callEnd = Date.now();
-			multiLevelLatencies.push(callEnd - callStart);
-		}
-
-		const multiLevelEnd = Date.now();
-		const multiLevelDuration = multiLevelEnd - multiLevelStart;
+		}, TOTAL_CALLS);
 
 		// Benchmark Redis-Only Cache
 		console.log("Testing Redis-Only Cache...");
-		const redisOnlyLatencies: number[] = [];
-		const redisOnlyStart = Date.now();
-
-		for (let i = 0; i < TOTAL_CALLS; i++) {
-			const keyIndex = Math.floor(Math.random() * uniqueKeys);
+		const redisOnlyBenchmark = await runBenchmark(async () => {
+			const keyIndex = getUniformKeyIndex(uniqueKeys);
 			const key = `speed_test_key_${keyIndex}`;
-			
-			const callStart = Date.now();
 			await redisOnlyCache.get(key, null);
-			const callEnd = Date.now();
-			redisOnlyLatencies.push(callEnd - callStart);
-		}
-
-		const redisOnlyEnd = Date.now();
-		const redisOnlyDuration = redisOnlyEnd - redisOnlyStart;
+		}, TOTAL_CALLS);
 
 		// Calculate statistics
-		multiLevelLatencies.sort((a, b) => a - b);
-		redisOnlyLatencies.sort((a, b) => a - b);
+		const multiLevelStats = calculateLatencyStats(multiLevelBenchmark.latencies);
+		const redisOnlyStats = calculateLatencyStats(redisOnlyBenchmark.latencies);
 
 		const multiLevelResult: BenchmarkResult = {
 			description: "Multi-Level Cache",
 			totalCalls: TOTAL_CALLS,
-			totalDuration: multiLevelDuration,
-			avgLatencyMs: multiLevelLatencies.reduce((a, b) => a + b, 0) / multiLevelLatencies.length,
-			p50LatencyMs: multiLevelLatencies[Math.floor(multiLevelLatencies.length * 0.5)],
-			p95LatencyMs: multiLevelLatencies[Math.floor(multiLevelLatencies.length * 0.95)],
-			p99LatencyMs: multiLevelLatencies[Math.floor(multiLevelLatencies.length * 0.99)],
-			throughputOps: (TOTAL_CALLS / multiLevelDuration) * 1000,
+			totalDuration: multiLevelBenchmark.totalDuration,
+			...multiLevelStats,
+			throughputOps: calculateThroughput(TOTAL_CALLS, multiLevelBenchmark.totalDuration),
 		};
 
 		const redisOnlyResult: BenchmarkResult = {
 			description: "Redis-Only Cache",
 			totalCalls: TOTAL_CALLS,
-			totalDuration: redisOnlyDuration,
-			avgLatencyMs: redisOnlyLatencies.reduce((a, b) => a + b, 0) / redisOnlyLatencies.length,
-			p50LatencyMs: redisOnlyLatencies[Math.floor(redisOnlyLatencies.length * 0.5)],
-			p95LatencyMs: redisOnlyLatencies[Math.floor(redisOnlyLatencies.length * 0.95)],
-			p99LatencyMs: redisOnlyLatencies[Math.floor(redisOnlyLatencies.length * 0.99)],
-			throughputOps: (TOTAL_CALLS / redisOnlyDuration) * 1000,
+			totalDuration: redisOnlyBenchmark.totalDuration,
+			...redisOnlyStats,
+			throughputOps: calculateThroughput(TOTAL_CALLS, redisOnlyBenchmark.totalDuration),
 		};
 
-		// Calculate improvements
-		const speedImprovement = ((redisOnlyDuration - multiLevelDuration) / redisOnlyDuration) * 100;
-		const latencyImprovement = ((redisOnlyResult.avgLatencyMs - multiLevelResult.avgLatencyMs) / redisOnlyResult.avgLatencyMs) * 100;
-		const throughputImprovement = ((multiLevelResult.throughputOps - redisOnlyResult.throughputOps) / redisOnlyResult.throughputOps) * 100;
-
 		// Print comparison
-		console.log("\nMulti-Level Cache Results:");
-		console.log(`  Total Duration: ${multiLevelResult.totalDuration}ms`);
-		console.log(`  Avg Latency: ${multiLevelResult.avgLatencyMs.toFixed(2)}ms`);
-		console.log(`  P50 Latency: ${multiLevelResult.p50LatencyMs}ms`);
-		console.log(`  P95 Latency: ${multiLevelResult.p95LatencyMs}ms`);
-		console.log(`  P99 Latency: ${multiLevelResult.p99LatencyMs}ms`);
-		console.log(`  Throughput: ${multiLevelResult.throughputOps.toFixed(2)} ops/sec`);
-
-		console.log("\nRedis-Only Cache Results:");
-		console.log(`  Total Duration: ${redisOnlyResult.totalDuration}ms`);
-		console.log(`  Avg Latency: ${redisOnlyResult.avgLatencyMs.toFixed(2)}ms`);
-		console.log(`  P50 Latency: ${redisOnlyResult.p50LatencyMs}ms`);
-		console.log(`  P95 Latency: ${redisOnlyResult.p95LatencyMs}ms`);
-		console.log(`  P99 Latency: ${redisOnlyResult.p99LatencyMs}ms`);
-		console.log(`  Throughput: ${redisOnlyResult.throughputOps.toFixed(2)} ops/sec`);
-
-		console.log("\nPerformance Comparison:");
-		console.log(`  Multi-Level is ${Math.abs(speedImprovement).toFixed(2)}% ${speedImprovement > 0 ? "FASTER" : "SLOWER"} overall`);
-		console.log(`  Multi-Level has ${Math.abs(latencyImprovement).toFixed(2)}% ${latencyImprovement > 0 ? "LOWER" : "HIGHER"} average latency`);
-		console.log(`  Multi-Level has ${Math.abs(throughputImprovement).toFixed(2)}% ${throughputImprovement > 0 ? "HIGHER" : "LOWER"} throughput\n`);
+		printBenchmarkResults("Multi-Level Cache Results", multiLevelResult);
+		printBenchmarkResults("Redis-Only Cache Results", redisOnlyResult);
+		printPerformanceComparison(redisOnlyResult, multiLevelResult);
 
 		// Cleanup
 		await redisClient.quit();
@@ -310,9 +185,7 @@ describe("Cache Performance Benchmarks", () => {
 	}, 120000);
 
 	it("Benchmark 3: Write Performance and Consistency", async () => {
-		console.log("\n========================================");
-		console.log("BENCHMARK 3: WRITE PERFORMANCE");
-		console.log("========================================\n");
+		printBenchmarkHeader("BENCHMARK 3: WRITE PERFORMANCE");
 
 		// Create fresh cache instances for this test
 		const redisClient = new Redis(redisContainer.getConnectionUrl());
@@ -334,71 +207,48 @@ describe("Cache Performance Benchmarks", () => {
 			defaultTTL: 3600,
 		});
 
-
 		// Benchmark Multi-Level Cache Writes
 		console.log("Testing Multi-Level Cache writes...");
-		const multiLevelWriteStart = Date.now();
-		const multiLevelWriteLatencies: number[] = [];
-
-		for (let i = 0; i < TOTAL_CALLS; i++) {
+		const multiLevelBenchmark = await runBenchmark(async () => {
+			const i = Math.floor(Math.random() * TOTAL_CALLS);
 			const key = `write_test_key_${i}`;
 			const value = { id: i, data: `write_data_${i}_${"x".repeat(100)}` };
-			
-			const callStart = Date.now();
 			await multiLevelCache.set(key, value);
-			const callEnd = Date.now();
-			multiLevelWriteLatencies.push(callEnd - callStart);
-		}
-
-		const multiLevelWriteEnd = Date.now();
-		const multiLevelWriteDuration = multiLevelWriteEnd - multiLevelWriteStart;
+		}, TOTAL_CALLS);
 
 		// Benchmark Redis-Only Cache Writes
 		console.log("Testing Redis-Only Cache writes...");
-		const redisOnlyWriteStart = Date.now();
-		const redisOnlyWriteLatencies: number[] = [];
-
-		for (let i = 0; i < TOTAL_CALLS; i++) {
+		const redisOnlyBenchmark = await runBenchmark(async () => {
+			const i = Math.floor(Math.random() * TOTAL_CALLS);
 			const key = `write_test_key_redis_${i}`;
 			const value = { id: i, data: `write_data_${i}_${"x".repeat(100)}` };
-			
-			const callStart = Date.now();
 			await redisOnlyCache.set(key, value);
-			const callEnd = Date.now();
-			redisOnlyWriteLatencies.push(callEnd - callStart);
-		}
-
-		const redisOnlyWriteEnd = Date.now();
-		const redisOnlyWriteDuration = redisOnlyWriteEnd - redisOnlyWriteStart;
+		}, TOTAL_CALLS);
 
 		// Calculate statistics
-		multiLevelWriteLatencies.sort((a, b) => a - b);
-		redisOnlyWriteLatencies.sort((a, b) => a - b);
+		const multiLevelStats = calculateLatencyStats(multiLevelBenchmark.latencies);
+		const redisOnlyStats = calculateLatencyStats(redisOnlyBenchmark.latencies);
 
-		const multiLevelWriteAvg = multiLevelWriteLatencies.reduce((a, b) => a + b, 0) / multiLevelWriteLatencies.length;
-		const redisOnlyWriteAvg = redisOnlyWriteLatencies.reduce((a, b) => a + b, 0) / redisOnlyWriteLatencies.length;
+		const multiLevelResult: BenchmarkResult = {
+			description: "Multi-Level Cache",
+			totalCalls: TOTAL_CALLS,
+			totalDuration: multiLevelBenchmark.totalDuration,
+			...multiLevelStats,
+			throughputOps: calculateThroughput(TOTAL_CALLS, multiLevelBenchmark.totalDuration),
+		};
 
-		const multiLevelWriteThroughput = (TOTAL_CALLS / multiLevelWriteDuration) * 1000;
-		const redisOnlyWriteThroughput = (TOTAL_CALLS / redisOnlyWriteDuration) * 1000;
+		const redisOnlyResult: BenchmarkResult = {
+			description: "Redis-Only Cache",
+			totalCalls: TOTAL_CALLS,
+			totalDuration: redisOnlyBenchmark.totalDuration,
+			...redisOnlyStats,
+			throughputOps: calculateThroughput(TOTAL_CALLS, redisOnlyBenchmark.totalDuration),
+		};
 
-		console.log("\nMulti-Level Cache Write Performance:");
-		console.log(`  Total Duration: ${multiLevelWriteDuration}ms`);
-		console.log(`  Avg Write Latency: ${multiLevelWriteAvg.toFixed(2)}ms`);
-		console.log(`  P50 Write Latency: ${multiLevelWriteLatencies[Math.floor(multiLevelWriteLatencies.length * 0.5)]}ms`);
-		console.log(`  P95 Write Latency: ${multiLevelWriteLatencies[Math.floor(multiLevelWriteLatencies.length * 0.95)]}ms`);
-		console.log(`  Write Throughput: ${multiLevelWriteThroughput.toFixed(2)} ops/sec`);
-
-		console.log("\nRedis-Only Cache Write Performance:");
-		console.log(`  Total Duration: ${redisOnlyWriteDuration}ms`);
-		console.log(`  Avg Write Latency: ${redisOnlyWriteAvg.toFixed(2)}ms`);
-		console.log(`  P50 Write Latency: ${redisOnlyWriteLatencies[Math.floor(redisOnlyWriteLatencies.length * 0.5)]}ms`);
-		console.log(`  P95 Write Latency: ${redisOnlyWriteLatencies[Math.floor(redisOnlyWriteLatencies.length * 0.95)]}ms`);
-		console.log(`  Write Throughput: ${redisOnlyWriteThroughput.toFixed(2)} ops/sec`);
-
-		const writeDiff = ((multiLevelWriteDuration - redisOnlyWriteDuration) / redisOnlyWriteDuration) * 100;
-		console.log("\nWrite Performance Comparison:");
-		console.log(`  Multi-Level writes are ${Math.abs(writeDiff).toFixed(2)}% ${writeDiff > 0 ? "SLOWER" : "FASTER"} than Redis-only`);
-		console.log(`  This is expected as writes must update both memory and Redis layers\n`);
+		// Print results
+		printBenchmarkResults("Multi-Level Cache Write Performance", multiLevelResult);
+		printBenchmarkResults("Redis-Only Cache Write Performance", redisOnlyResult);
+		printWritePerformanceComparison(multiLevelResult, redisOnlyResult);
 
 		// Cleanup
 		await redisClient.quit();
@@ -406,9 +256,7 @@ describe("Cache Performance Benchmarks", () => {
 	}, 120000);
 
 	it("Benchmark 4: Memory Efficiency Analysis", async () => {
-		console.log("\n========================================");
-		console.log("BENCHMARK 4: MEMORY EFFICIENCY");
-		console.log("========================================\n");
+		printBenchmarkHeader("BENCHMARK 4: MEMORY EFFICIENCY");
 
 		// Create fresh cache instance for this test
 		const redisClient = new Redis(redisContainer.getConnectionUrl());
@@ -428,28 +276,16 @@ describe("Cache Performance Benchmarks", () => {
 		memoryLevel.purge();
 
 		console.log("Populating cache with test data...");
-		for (let i = 0; i < totalKeys; i++) {
-			const key = `memory_test_${i}`;
-			const value = { id: i, data: "x".repeat(valueSizeBytes) };
-			await multiLevelCache.set(key, value);
-		}
+		await populateCache(multiLevelCache, "memory_test", totalKeys, valueSizeBytes);
 
 		// Get memory usage info
 		const heap = memoryLevel.getHeap();
 		const itemCount = heap.getCount();
-		const estimatedMemoryUsage = (itemCount * valueSizeBytes) / 1024 / 1024; // MB
+		const estimatedMemoryMB = (itemCount * valueSizeBytes) / 1024 / 1024;
+		const avgMemoryPerItemKB = valueSizeBytes / 1024;
 
-		console.log("\nMemory Usage Statistics:");
-		console.log(`  Items in Memory Cache: ${itemCount}`);
-		console.log(`  Estimated Memory Usage: ~${estimatedMemoryUsage.toFixed(2)} MB`);
-		console.log(`  Average Memory per Item: ~${(valueSizeBytes / 1024).toFixed(2)} KB`);
-		console.log(`  Memory Efficiency: ${((itemCount / totalKeys) * 100).toFixed(2)}% of written items retained`);
-
-		console.log("\nMemory Cache Benefits:");
-		console.log(`  - Fast in-memory access for frequently accessed items`);
-		console.log(`  - Automatic eviction based on configured strategies`);
-		console.log(`  - Reduces network latency for cache hits`);
-		console.log(`  - Offloads Redis for better resource utilization\n`);
+		// Print results
+		printMemoryEfficiency(itemCount, totalKeys, estimatedMemoryMB, avgMemoryPerItemKB);
 
 		// Cleanup
 		await redisClient.quit();
