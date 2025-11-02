@@ -426,9 +426,7 @@ describe("Cache Performance Benchmarks", () => {
 		const valueSizeBytes = 1000; // ~1KB per value
 
 		// Clear memory cache first
-		if (typeof memoryLevel.purge === "function") {
-			memoryLevel.purge();
-		}
+		memoryLevel.purge();
 
 		console.log("Populating cache with test data...");
 		for (let i = 0; i < totalKeys; i++) {
