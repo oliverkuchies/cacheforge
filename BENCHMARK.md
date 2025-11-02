@@ -41,21 +41,21 @@ The benchmark suite includes four comprehensive tests that measure different asp
 **Example Output:**
 ```
 Results:
-  Total Calls: 10000
-  Memory Cache Hits: 10000 (100.00%)
+  Total Calls: 100000
+  Memory Cache Hits: 100000 (100.00%)
   Redis Cache Hits: 0 (0.00%)
   Cache Misses: 0 (0.00%)
 
   Performance Metrics:
-    Total Duration: 35ms
+    Total Duration: 104ms
     Average Latency: 0.00ms
     P50 Latency: 0ms
     P95 Latency: 0ms
     P99 Latency: 0ms
-    Throughput: 285714.29 ops/sec
+    Throughput: 961538.46 ops/sec
 
   Key Insights:
-    - Memory cache prevented 10000 Redis calls
+    - Memory cache prevented 100000 Redis calls
     - That's 100.00% reduction in Redis load
     - Redis was hit 0 times when memory cache missed
 ```
@@ -85,25 +85,25 @@ Results:
 **Example Output:**
 ```
 Multi-Level Cache Results:
-  Total Duration: 24ms
+  Total Duration: 77ms
   Avg Latency: 0.00ms
   P50 Latency: 0ms
   P95 Latency: 0ms
   P99 Latency: 0ms
-  Throughput: 416666.67 ops/sec
+  Throughput: 1298701.30 ops/sec
 
 Redis-Only Cache Results:
-  Total Duration: 2322ms
-  Avg Latency: 0.23ms
+  Total Duration: 27777ms
+  Avg Latency: 0.28ms
   P50 Latency: 0ms
   P95 Latency: 1ms
-  P99 Latency: 2ms
-  Throughput: 4306.63 ops/sec
+  P99 Latency: 1ms
+  Throughput: 3600.10 ops/sec
 
 Performance Comparison:
-  Multi-Level is 98.97% FASTER overall
-  Multi-Level has 99.01% LOWER average latency
-  Multi-Level has 9575.00% HIGHER throughput
+  Multi-Level is 99.72% FASTER overall
+  Multi-Level has 99.75% LOWER average latency
+  Multi-Level has 35974.03% HIGHER throughput
 ```
 
 ### Benchmark 3: Write Performance and Consistency
@@ -128,21 +128,21 @@ Performance Comparison:
 **Example Output:**
 ```
 Multi-Level Cache Write Performance:
-  Total Duration: 496ms
-  Avg Write Latency: 0.50ms
+  Total Duration: 41033ms
+  Avg Write Latency: 0.41ms
   P50 Write Latency: 0ms
   P95 Write Latency: 1ms
-  Write Throughput: 2016.13 ops/sec
+  Write Throughput: 2437.06 ops/sec
 
 Redis-Only Cache Write Performance:
-  Total Duration: 398ms
-  Avg Write Latency: 0.40ms
+  Total Duration: 37223ms
+  Avg Write Latency: 0.37ms
   P50 Write Latency: 0ms
-  P95 Write Latency: 2ms
-  Write Throughput: 2512.56 ops/sec
+  P95 Write Latency: 1ms
+  Write Throughput: 2686.51 ops/sec
 
 Write Performance Comparison:
-  Multi-Level writes are 24.62% SLOWER than Redis-only
+  Multi-Level writes are 10.24% SLOWER than Redis-only
   This is expected as writes must update both memory and Redis layers
 ```
 
@@ -151,7 +151,7 @@ Write Performance Comparison:
 **Purpose:** Analyzes memory usage and efficiency of the in-memory cache layer.
 
 **Methodology:**
-- Populates cache with 1,000 entries (~1KB each)
+- Populates cache with 100000 entries (~1KB each)
 - Measures actual memory usage
 - Calculates retention efficiency
 
@@ -169,8 +169,8 @@ Write Performance Comparison:
 **Example Output:**
 ```
 Memory Usage Statistics:
-  Items in Memory Cache: 1000
-  Estimated Memory Usage: ~0.95 MB
+  Items in Memory Cache: 100000
+  Estimated Memory Usage: ~95.37 MB
   Average Memory per Item: ~0.98 KB
   Memory Efficiency: 100.00% of written items retained
 

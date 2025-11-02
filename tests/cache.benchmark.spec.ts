@@ -27,6 +27,8 @@ interface BenchmarkResult {
 	throughputOps: number;
 }
 
+const TOTAL_CALLS = 100000;
+
 describe("Cache Performance Benchmarks", () => {
 	let redisContainer: StartedRedisContainer;
 
@@ -56,8 +58,7 @@ describe("Cache Performance Benchmarks", () => {
 			defaultTTL: 3600,
 		});
 
-		const totalCalls = 10000;
-		const uniqueKeys = 100; // Total unique keys
+		const uniqueKeys = 1000; // Total unique keys
 		const hotKeys = 20; // 20% of keys that will account for 80% of requests
 
 		// Pre-populate cache with data
@@ -83,11 +84,11 @@ describe("Cache Performance Benchmarks", () => {
 			valueGetter?: (() => Promise<T>) | T,
 			ttl?: number,
 		): Promise<T | null> {
-			const result = await originalMemoryGet(key, valueGetter, ttl);
+			const result = await originalMemoryGet(key);
 			if (result !== null && result !== undefined) {
 				memoryCacheHits++;
 			}
-			return result;
+			return result as T;
 		};
 		memoryLevel.get = instrumentedMemoryGet as any;
 
@@ -97,13 +98,13 @@ describe("Cache Performance Benchmarks", () => {
 			valueGetter?: (() => Promise<T>) | T,
 			ttl?: number,
 		): Promise<T | null> {
-			const result = await originalRedisGet(key, valueGetter, ttl);
+			const result = await originalRedisGet(key);
 			if (result !== null && result !== undefined) {
 				redisCacheHits++;
 			} else {
 				cacheMisses++;
 			}
-			return result;
+			return result as T;
 		};
 		redisLevel.get = instrumentedRedisGet as any;
 
@@ -111,7 +112,7 @@ describe("Cache Performance Benchmarks", () => {
 		const latencies: number[] = [];
 
 		// Simulate 80/20 access pattern (80% requests to 20% of keys)
-		for (let i = 0; i < totalCalls; i++) {
+		for (let i = 0; i < TOTAL_CALLS; i++) {
 			const callStart = Date.now();
 			
 			let keyIndex: number;
@@ -124,7 +125,7 @@ describe("Cache Performance Benchmarks", () => {
 			}
 
 			const key = `benchmark_key_${keyIndex}`;
-			await multiLevelCache.get(key);
+			await multiLevelCache.get(key, null);
 			
 			const callEnd = Date.now();
 			latencies.push(callEnd - callStart);
@@ -139,11 +140,11 @@ describe("Cache Performance Benchmarks", () => {
 		const p50 = latencies[Math.floor(latencies.length * 0.5)];
 		const p95 = latencies[Math.floor(latencies.length * 0.95)];
 		const p99 = latencies[Math.floor(latencies.length * 0.99)];
-		const throughput = (totalCalls / totalDuration) * 1000;
+		const throughput = (TOTAL_CALLS / totalDuration) * 1000;
 
 		const result: BenchmarkResult = {
 			description: "Multi-Level Cache with 80/20 Access Pattern",
-			totalCalls,
+			totalCalls: TOTAL_CALLS,
 			memoryCacheHits,
 			redisCacheHits,
 			cacheMisses,
@@ -158,9 +159,9 @@ describe("Cache Performance Benchmarks", () => {
 		// Print results
 		console.log("Results:");
 		console.log(`  Total Calls: ${result.totalCalls}`);
-		console.log(`  Memory Cache Hits: ${result.memoryCacheHits} (${((result.memoryCacheHits / result.totalCalls) * 100).toFixed(2)}%)`);
-		console.log(`  Redis Cache Hits: ${result.redisCacheHits} (${((result.redisCacheHits / result.totalCalls) * 100).toFixed(2)}%)`);
-		console.log(`  Cache Misses: ${result.cacheMisses} (${((result.cacheMisses / result.totalCalls) * 100).toFixed(2)}%)`);
+		console.log(`  Memory Cache Hits: ${result.memoryCacheHits} (${((result.memoryCacheHits! / result.totalCalls) * 100).toFixed(2)}%)`);
+		console.log(`  Redis Cache Hits: ${result.redisCacheHits} (${((result.redisCacheHits! / result.totalCalls) * 100).toFixed(2)}%)`);
+		console.log(`  Cache Misses: ${result.cacheMisses} (${((result.cacheMisses! / result.totalCalls) * 100).toFixed(2)}%)`);
 		console.log(`\n  Performance Metrics:`);
 		console.log(`    Total Duration: ${result.totalDuration}ms`);
 		console.log(`    Average Latency: ${result.avgLatencyMs.toFixed(2)}ms`);
@@ -170,7 +171,7 @@ describe("Cache Performance Benchmarks", () => {
 		console.log(`    Throughput: ${result.throughputOps.toFixed(2)} ops/sec`);
 		console.log(`\n  Key Insights:`);
 		console.log(`    - Memory cache prevented ${result.memoryCacheHits} Redis calls`);
-		console.log(`    - That's ${((result.memoryCacheHits / result.totalCalls) * 100).toFixed(2)}% reduction in Redis load`);
+		console.log(`    - That's ${((result.memoryCacheHits! / result.totalCalls) * 100).toFixed(2)}% reduction in Redis load`);
 		console.log(`    - Redis was hit ${result.redisCacheHits} times when memory cache missed\n`);
 
 		// Cleanup
@@ -202,7 +203,6 @@ describe("Cache Performance Benchmarks", () => {
 			defaultTTL: 3600,
 		});
 
-		const totalCalls = 10000;
 		const uniqueKeys = 100;
 
 		// Pre-populate both caches
@@ -220,12 +220,12 @@ describe("Cache Performance Benchmarks", () => {
 		const multiLevelLatencies: number[] = [];
 		const multiLevelStart = Date.now();
 
-		for (let i = 0; i < totalCalls; i++) {
+		for (let i = 0; i < TOTAL_CALLS; i++) {
 			const keyIndex = Math.floor(Math.random() * uniqueKeys);
 			const key = `speed_test_key_${keyIndex}`;
 			
 			const callStart = Date.now();
-			await multiLevelCache.get(key);
+			await multiLevelCache.get(key, null);
 			const callEnd = Date.now();
 			multiLevelLatencies.push(callEnd - callStart);
 		}
@@ -238,12 +238,12 @@ describe("Cache Performance Benchmarks", () => {
 		const redisOnlyLatencies: number[] = [];
 		const redisOnlyStart = Date.now();
 
-		for (let i = 0; i < totalCalls; i++) {
+		for (let i = 0; i < TOTAL_CALLS; i++) {
 			const keyIndex = Math.floor(Math.random() * uniqueKeys);
 			const key = `speed_test_key_${keyIndex}`;
 			
 			const callStart = Date.now();
-			await redisOnlyCache.get(key);
+			await redisOnlyCache.get(key, null);
 			const callEnd = Date.now();
 			redisOnlyLatencies.push(callEnd - callStart);
 		}
@@ -257,24 +257,24 @@ describe("Cache Performance Benchmarks", () => {
 
 		const multiLevelResult: BenchmarkResult = {
 			description: "Multi-Level Cache",
-			totalCalls,
+			totalCalls: TOTAL_CALLS,
 			totalDuration: multiLevelDuration,
 			avgLatencyMs: multiLevelLatencies.reduce((a, b) => a + b, 0) / multiLevelLatencies.length,
 			p50LatencyMs: multiLevelLatencies[Math.floor(multiLevelLatencies.length * 0.5)],
 			p95LatencyMs: multiLevelLatencies[Math.floor(multiLevelLatencies.length * 0.95)],
 			p99LatencyMs: multiLevelLatencies[Math.floor(multiLevelLatencies.length * 0.99)],
-			throughputOps: (totalCalls / multiLevelDuration) * 1000,
+			throughputOps: (TOTAL_CALLS / multiLevelDuration) * 1000,
 		};
 
 		const redisOnlyResult: BenchmarkResult = {
 			description: "Redis-Only Cache",
-			totalCalls,
+			totalCalls: TOTAL_CALLS,
 			totalDuration: redisOnlyDuration,
 			avgLatencyMs: redisOnlyLatencies.reduce((a, b) => a + b, 0) / redisOnlyLatencies.length,
 			p50LatencyMs: redisOnlyLatencies[Math.floor(redisOnlyLatencies.length * 0.5)],
 			p95LatencyMs: redisOnlyLatencies[Math.floor(redisOnlyLatencies.length * 0.95)],
 			p99LatencyMs: redisOnlyLatencies[Math.floor(redisOnlyLatencies.length * 0.99)],
-			throughputOps: (totalCalls / redisOnlyDuration) * 1000,
+			throughputOps: (TOTAL_CALLS / redisOnlyDuration) * 1000,
 		};
 
 		// Calculate improvements
@@ -334,14 +334,13 @@ describe("Cache Performance Benchmarks", () => {
 			defaultTTL: 3600,
 		});
 
-		const totalWrites = 1000;
 
 		// Benchmark Multi-Level Cache Writes
 		console.log("Testing Multi-Level Cache writes...");
 		const multiLevelWriteStart = Date.now();
 		const multiLevelWriteLatencies: number[] = [];
 
-		for (let i = 0; i < totalWrites; i++) {
+		for (let i = 0; i < TOTAL_CALLS; i++) {
 			const key = `write_test_key_${i}`;
 			const value = { id: i, data: `write_data_${i}_${"x".repeat(100)}` };
 			
@@ -359,7 +358,7 @@ describe("Cache Performance Benchmarks", () => {
 		const redisOnlyWriteStart = Date.now();
 		const redisOnlyWriteLatencies: number[] = [];
 
-		for (let i = 0; i < totalWrites; i++) {
+		for (let i = 0; i < TOTAL_CALLS; i++) {
 			const key = `write_test_key_redis_${i}`;
 			const value = { id: i, data: `write_data_${i}_${"x".repeat(100)}` };
 			
@@ -379,8 +378,8 @@ describe("Cache Performance Benchmarks", () => {
 		const multiLevelWriteAvg = multiLevelWriteLatencies.reduce((a, b) => a + b, 0) / multiLevelWriteLatencies.length;
 		const redisOnlyWriteAvg = redisOnlyWriteLatencies.reduce((a, b) => a + b, 0) / redisOnlyWriteLatencies.length;
 
-		const multiLevelWriteThroughput = (totalWrites / multiLevelWriteDuration) * 1000;
-		const redisOnlyWriteThroughput = (totalWrites / redisOnlyWriteDuration) * 1000;
+		const multiLevelWriteThroughput = (TOTAL_CALLS / multiLevelWriteDuration) * 1000;
+		const redisOnlyWriteThroughput = (TOTAL_CALLS / redisOnlyWriteDuration) * 1000;
 
 		console.log("\nMulti-Level Cache Write Performance:");
 		console.log(`  Total Duration: ${multiLevelWriteDuration}ms`);
@@ -422,7 +421,7 @@ describe("Cache Performance Benchmarks", () => {
 			levels: [memoryLevel, redisLevel],
 			defaultTTL: 3600,
 		});
-		const totalKeys = 1000;
+		const totalKeys = TOTAL_CALLS;
 		const valueSizeBytes = 1000; // ~1KB per value
 
 		// Clear memory cache first
