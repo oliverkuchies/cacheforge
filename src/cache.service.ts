@@ -23,10 +23,14 @@ export class CacheService {
 	protected versioning: boolean;
 
 	constructor(options: CacheServiceOptions) {
-		this.levels = options.levels;
-		this.defaultTTL = options.defaultTTL ?? DEFAULT_TTL;
-		this.defaultLockTTL = options.defaultLockTTL ?? DEFAULT_LOCK_TTL;
-		this.versioning = options.versioning ?? false;
+		const { defaultTTL, defaultLockTTL, levels, versioning } = options;
+
+		this.levels = levels;
+		this.defaultTTL = (typeof defaultTTL === "number" && 
+			!isNaN(defaultTTL)) ? defaultTTL : DEFAULT_TTL;
+		this.defaultLockTTL = (typeof defaultLockTTL === "number" && 
+			!isNaN(defaultLockTTL)) ? defaultLockTTL : DEFAULT_LOCK_TTL;
+		this.versioning = versioning ?? false;
 	}
 
 	/**
@@ -40,6 +44,28 @@ export class CacheService {
 				handleGracefully(async () => {
 					return await level.flushAll();
 				}, "Failed to flush cache level"),
+			),
+		);
+	}
+
+	/**
+	 * Loop through cache levels to set the values for the given keys
+	 * @param keys - cache keys
+	 * @param values - values to cache
+	 * @param ttl - time to live in seconds
+	 */
+
+	async mset<T>(
+		keys: string[],
+		values: T[],
+		ttl = this.defaultTTL,
+	): Promise<void> {
+		await Promise.allSettled(
+			this.levels.map((level) =>
+				handleGracefully(
+					() => level.mset<T>(keys, values, ttl),
+					"Failed to mset keys in cache level",
+				),
 			),
 		);
 	}

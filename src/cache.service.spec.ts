@@ -512,7 +512,7 @@ describe("should handle flushAll across levels", () => {
 	});
 });
 
-describe("Multi-get and Multi-delete functionality", () => {
+describe("Multi-get, Multi-delete and multi set functionality", () => {
 	beforeAll(async () => {
 		redisContainer = await new RedisContainer("redis:7.2").start();
 		client = new Redis(redisContainer.getConnectionUrl());
@@ -573,5 +573,56 @@ describe("Multi-get and Multi-delete functionality", () => {
 			memoryValue,
 			"Memory cache should have been backfilled with the value",
 		).toBe(value);
+	});
+
+	it("should set multiple values across levels in mset", async () => {
+		const cache = new CacheService({ levels: [memoryLevel, redisLevel] });
+		const keys = [
+			faker.string.alpha(10),
+			faker.string.alpha(10),
+			faker.string.alpha(10),
+		];
+		const values = [
+			faker.string.alpha(10),
+			faker.string.alpha(10),
+			faker.string.alpha(10),
+		];
+
+		await cache.mset(keys, values, 3600);
+
+		const retrievedValues = await cache.mget(keys);
+
+		expect(retrievedValues).toEqual(values);
+		
+		await cache.mdel(keys);
+
+		expect(await cache.mget(keys)).toEqual([null, null, null]);
+	});
+});
+
+describe('CacheService should instantiate with default TTL and Lock TTL values', () => {
+	it('should use provided defaultTTL and defaultLockTTL values', () => {
+		const customDefaultTTL = 5000;
+		const customDefaultLockTTL = 100;
+
+		const cache = new CacheService({
+			levels: [memoryLevel, redisLevel],
+			defaultTTL: customDefaultTTL,
+			defaultLockTTL: customDefaultLockTTL,
+		});
+
+		expect(cache['defaultTTL']).toBe(customDefaultTTL);
+		expect(cache['defaultLockTTL']).toBe(customDefaultLockTTL);
+	});
+
+	it('should fallback to DEFAULT_TTL and DEFAULT_LOCK_TTL if invalid values are provided', () => {
+		const cache = new CacheService({
+			levels: [memoryLevel, redisLevel],
+			defaultTTL: NaN,
+			defaultLockTTL: NaN,
+		});
+
+		expect(cache['defaultTTL']).toBe(3600); // DEFAULT_TTL
+		expect(cache['defaultLockTTL']).toBe(30); // DEFAULT_LOCK_TTL
 	});
 });
