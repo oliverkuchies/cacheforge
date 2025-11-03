@@ -28,6 +28,16 @@ export class CacheService {
 		this.versioning = options.versioning ?? false;
 	}
 
+	async flushAll(): Promise<void> {
+		await Promise.allSettled(
+			this.levels.map((level) =>
+				handleGracefully(async () => {
+					return await level.flushAll();
+				}, "Failed to flush cache level"),
+			),
+		);
+	}
+
 	/**
 	 * Loop through cache levels to get the value for the given key
 	 * @param key - cache key

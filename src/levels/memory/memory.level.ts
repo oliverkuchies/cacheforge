@@ -99,4 +99,9 @@ export class MemoryCacheLevel
 	getHeap() {
 		return this.heap;
 	}
+
+	flushAll(): Promise<void> {
+		this.purge();
+		return Promise.resolve();
+	}
 }

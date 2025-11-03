@@ -491,3 +491,23 @@ describe("get fallback to valueGetter", () => {
 		expect(result).toBe("fallback");
 	});
 });
+
+describe("should handle flushAll across levels", () => {
+	it("should flush all levels without error", async () => {
+		const cache = new CacheService({ levels: [memoryLevel, redisLevel] });
+		await cache.flushAll();
+	});
+
+	it("should actually flush levels with data", async () => {
+		const cache = new CacheService({ levels: [memoryLevel, redisLevel] });
+		const key = faker.string.alpha(10);
+		const value = faker.string.alpha(10);
+		await cache.set(key, value);
+
+		expect(await cache.get(key, null)).toBe(value);
+
+		await cache.flushAll();
+
+		expect(await cache.get(key, null)).toBe(null);
+	});
+});

@@ -34,4 +34,9 @@ export interface CacheLevel {
 	 * @param keys The cache keys.
 	 **/
 	mdel(keys: string[]): Promise<void>;
+
+	/**
+	 * Flush all cache entries in this level.
+	 */
+	flushAll(): Promise<void>;
 }

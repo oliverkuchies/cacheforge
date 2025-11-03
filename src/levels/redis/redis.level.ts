@@ -82,4 +82,12 @@ export class RedisCacheLevel implements CacheLevel, Lockable {
 			await lock.release();
 		}
 	}
+
+	/**
+	 * Not recommended for production use in large datasets
+	 * as it can be slow and blocking.
+	 */
+	async flushAll(): Promise<void> {
+		await this.client.flushall();
+	}
 }
