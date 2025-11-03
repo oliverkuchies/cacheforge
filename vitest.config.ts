@@ -8,7 +8,9 @@ export default defineConfig({
 				"**/interfaces/**", // Exclude all files in any interfaces directory
 				"**/*.d.ts", // Exclude all type definition files,
 				"dist/**",
+				"tests/**",
 			],
 		},
+		exclude: ["**/benchmarks/**", "node_modules/**"],
 	},
 });
