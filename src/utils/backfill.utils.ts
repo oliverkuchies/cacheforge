@@ -50,7 +50,7 @@ export async function backfillLevels(
 	value: unknown,
 	ttl?: number,
 ): Promise<void> {
-	console.log('backfillLevels called with key:', key);
+	console.log("backfillLevels called with key:", key);
 	if (failedLevels.length === 0) return;
 	await Promise.allSettled(
 		failedLevels.map((failedLevel) => {

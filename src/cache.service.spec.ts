@@ -532,12 +532,8 @@ describe("Multi-get and Multi-delete functionality", () => {
 		await cache.set("bingo", bingo1);
 		await cache.set("bingo1", bingo2);
 		await cache.set("bingo2", bingo3);
-		const multiValues = await cache.mget([
-			"bingo",
-			"bingo1",
-			"bingo2",
-		]);
-		
+		const multiValues = await cache.mget(["bingo", "bingo1", "bingo2"]);
+
 		// Compare as strings to handle BigInt/Number serialization differences
 		expect(multiValues.map(String)).toEqual(
 			[bingo1, bingo2, bingo3].map(String),
@@ -545,9 +541,11 @@ describe("Multi-get and Multi-delete functionality", () => {
 		// Now delete them
 		await cache.mdel(["bingo", "bingo1", "bingo2"]);
 
-		expect(
-			await cache.mget(["bingo", "bingo1", "bingo2"]),
-		).toEqual([null, null, null]);
+		expect(await cache.mget(["bingo", "bingo1", "bingo2"])).toEqual([
+			null,
+			null,
+			null,
+		]);
 	});
 
 	it("should retrieve values from redis if memory level misses in mget", async () => {

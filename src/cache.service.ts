@@ -41,19 +41,17 @@ export class CacheService {
 					return await level.flushAll();
 				}, "Failed to flush cache level"),
 			),
-		)
+		);
 	}
 
 	/**
-	 * Loop through cache levels to get the values for the given keys, 
+	 * Loop through cache levels to get the values for the given keys,
 	 * upon failure backfill missing keys
 	 * @param keys - cache keys
 	 * @returns array of cached values or null if not found
 	 */
-	async mget(
-		keys: string[]
-	) {
-		const results: (unknown)[] = new Array(keys.length).fill(null);
+	async mget(keys: string[]) {
+		const results: unknown[] = new Array(keys.length).fill(null);
 		const missingKeysIndexes: number[] = [];
 		const failedLevels: CacheLevel[] = [];
 
@@ -70,7 +68,7 @@ export class CacheService {
 				}
 			}
 		}
-		
+
 		await backfillLevelsWithMultiKeys(
 			failedLevels,
 			keys.filter((_, index) => missingKeysIndexes.includes(index)),

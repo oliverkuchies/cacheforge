@@ -63,9 +63,11 @@ export class MemoryCacheLevel
 				const expiryDate = Date.now() + ttl * 1000;
 				const storedItem = { value, expiry: expiryDate };
 				this.updateStore(key, storedItem);
+
+				return Promise.resolve();
 			}),
 		);
-	
+
 		return values;
 	}
 
