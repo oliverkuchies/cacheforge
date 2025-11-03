@@ -4,14 +4,14 @@ import {
 } from "@testcontainers/redis";
 import { Redis } from "ioredis";
 import { afterAll, beforeAll, describe, it } from "vitest";
-import { CacheService } from "../src/cache.service";
+import { CacheService } from "../../src/cache.service";
 import {
 	MemoryCacheLevel,
 	RedisCacheLevel,
-} from "../src/levels";
-import { FirstExpiringMemoryPolicy } from "../src/policies/first-expiring-memory.policy";
-import { MemoryPercentageLimitStrategy } from "../src/strategies/memory-percentage-limit.strategy";
-import type { StoredHeapItem } from "../src/levels/memory/memory.level";
+} from "../../src/levels";
+import { FirstExpiringMemoryPolicy } from "../../src/policies/first-expiring-memory.policy";
+import { MemoryPercentageLimitStrategy } from "../../src/strategies/memory-percentage-limit.strategy";
+import type { StoredHeapItem } from "../../src/levels/memory/memory.level";
 import {
 	type BenchmarkResult,
 	calculateLatencyStats,
@@ -22,7 +22,7 @@ import {
 	instrumentRedisCache,
 	populateCache,
 	runBenchmark,
-} from "./utilities/benchmark.utilities";
+} from "../utilities/benchmark.utilities";
 import {
 	printBenchmarkHeader,
 	printBenchmarkResults,
@@ -30,7 +30,7 @@ import {
 	printMemoryEfficiency,
 	printPerformanceComparison,
 	printWritePerformanceComparison,
-} from "./utilities/benchmark-output.utilities";
+} from "../utilities/benchmark-output.utilities";
 
 const TOTAL_CALLS = 10000;
 

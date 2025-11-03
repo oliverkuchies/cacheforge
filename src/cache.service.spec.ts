@@ -511,3 +511,118 @@ describe("should handle flushAll across levels", () => {
 		expect(await cache.get(key, null)).toBe(null);
 	});
 });
+
+describe("Multi-get, Multi-delete and multi set functionality", () => {
+	beforeAll(async () => {
+		redisContainer = await new RedisContainer("redis:7.2").start();
+		client = new Redis(redisContainer.getConnectionUrl());
+		redisLevel = new RedisCacheLevel(client);
+
+		cacheService = new CacheService({
+			levels: [memoryLevel, redisLevel],
+		});
+	});
+
+	it("should mget and mdel across multiple levels", async () => {
+		const cache = new CacheService({ levels: [memoryLevel, redisLevel] });
+		const bingo1 = faker.number.bigInt();
+		const bingo2 = faker.number.bigInt();
+		const bingo3 = faker.number.bigInt();
+
+		await cache.set("bingo", bingo1);
+		await cache.set("bingo1", bingo2);
+		await cache.set("bingo2", bingo3);
+		const multiValues = await cache.mget(["bingo", "bingo1", "bingo2"]);
+
+		// Compare as strings to handle BigInt/Number serialization differences
+		expect(multiValues.map(String)).toEqual(
+			[bingo1, bingo2, bingo3].map(String),
+		);
+		// Now delete them
+		await cache.mdel(["bingo", "bingo1", "bingo2"]);
+
+		expect(await cache.mget(["bingo", "bingo1", "bingo2"])).toEqual([
+			null,
+			null,
+			null,
+		]);
+	});
+
+	it("should retrieve values from redis if memory level misses in mget", async () => {
+		const cache = new CacheService({ levels: [memoryLevel, redisLevel] });
+		const cacheKey = faker.string.alpha(10);
+		const value = faker.string.alpha(10);
+
+		// Directly set the value in the Redis level (lower level)
+		await redisLevel.set(cacheKey, value, 3600);
+
+		// Ensure memory level does not have the value initially
+		expect(await memoryLevel.get(cacheKey)).toBeUndefined();
+
+		// Now attempt to mget the value via the cache service
+		const retrievedValues = await cache.mget([cacheKey]);
+
+		expect(
+			retrievedValues[0],
+			"Retrieved value should match the original value from Redis",
+		).toBe(value);
+
+		// Now check if the value has been backfilled to the memory level (higher level)
+		const memoryValue = await memoryLevel.get(cacheKey);
+		expect(
+			memoryValue,
+			"Memory cache should have been backfilled with the value",
+		).toBe(value);
+	});
+
+	it("should set multiple values across levels in mset", async () => {
+		const cache = new CacheService({ levels: [memoryLevel, redisLevel] });
+		const keys = [
+			faker.string.alpha(10),
+			faker.string.alpha(10),
+			faker.string.alpha(10),
+		];
+		const values = [
+			faker.string.alpha(10),
+			faker.string.alpha(10),
+			faker.string.alpha(10),
+		];
+
+		await cache.mset(keys, values, 3600);
+
+		const retrievedValues = await cache.mget(keys);
+
+		expect(retrievedValues).toEqual(values);
+
+		await cache.mdel(keys);
+
+		expect(await cache.mget(keys)).toEqual([null, null, null]);
+	});
+});
+
+describe("CacheService should instantiate with default TTL and Lock TTL values", () => {
+	it("should use provided defaultTTL and defaultLockTTL values", () => {
+		const customDefaultTTL = 5000;
+		const customDefaultLockTTL = 100;
+
+		const cache = new CacheService({
+			levels: [memoryLevel, redisLevel],
+			defaultTTL: customDefaultTTL,
+			defaultLockTTL: customDefaultLockTTL,
+		});
+
+		expect(cache.defaultTTL).toBe(customDefaultTTL);
+		expect(cache.defaultLockTTL).toBe(customDefaultLockTTL);
+	});
+
+	it("should fallback to DEFAULT_TTL and DEFAULT_LOCK_TTL if invalid values are provided", () => {
+		const cache = new CacheService({
+			levels: [memoryLevel, redisLevel],
+			defaultTTL: NaN,
+			defaultLockTTL: NaN,
+		});
+
+		expect(cache.defaultTTL).toBe(3600); // DEFAULT_TTL
+		expect(cache.defaultLockTTL).toBe(30); // DEFAULT_LOCK_TTL
+	});
+});

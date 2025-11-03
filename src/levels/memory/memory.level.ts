@@ -52,6 +52,25 @@ export class MemoryCacheLevel
 		triggerMemoryChange();
 	}
 
+	async mset<T>(
+		keys: string[],
+		values: T[],
+		ttl: number = DEFAULT_TTL,
+	): Promise<T[]> {
+		await Promise.allSettled(
+			keys.map((key, index) => {
+				const value = values[index];
+				const expiryDate = Date.now() + ttl * 1000;
+				const storedItem = { value, expiry: expiryDate };
+				this.updateStore(key, storedItem);
+
+				return Promise.resolve();
+			}),
+		);
+
+		return values;
+	}
+
 	/**
 	 * Retrieve multiple values from the cache.
 	 * @param key The cache key.
@@ -63,7 +82,7 @@ export class MemoryCacheLevel
 			const cachedValue = this.store.get(k) as StoredItem | undefined;
 
 			if (cachedValue === null || cachedValue === undefined) {
-				results.push(undefined as T);
+				results.push(cachedValue as T);
 			} else {
 				results.push(cachedValue.value as T);
 			}

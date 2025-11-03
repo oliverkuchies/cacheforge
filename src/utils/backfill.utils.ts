@@ -24,6 +24,26 @@ export async function backfillVersionedLevels(
 	);
 }
 
+export async function backfillLevelsWithMultiKeys(
+	failedLevels: CacheLevel[],
+	keys: string[],
+	values: unknown[],
+	ttl?: number,
+): Promise<void> {
+	if (failedLevels.length === 0) return;
+	await Promise.allSettled(
+		failedLevels.map((failedLevel) => {
+			return handleGracefully(
+				() => {
+					return failedLevel.mset(keys, values, ttl);
+				},
+				"Failed to backfill mset, gracefully continuing with next level.",
+				false,
+			);
+		}),
+	);
+}
+
 export async function backfillLevels(
 	failedLevels: CacheLevel[],
 	key: string,

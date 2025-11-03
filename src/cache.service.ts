@@ -4,6 +4,7 @@ import type { CacheLevel } from "./levels/interfaces/cache-level";
 import type { Lockable } from "./levels/interfaces/lockable";
 import {
 	backfillLevels,
+	backfillLevelsWithMultiKeys,
 	backfillVersionedLevels,
 } from "./utils/backfill.utils";
 import { handleGracefully } from "./utils/error.utils";
@@ -22,12 +23,25 @@ export class CacheService {
 	protected versioning: boolean;
 
 	constructor(options: CacheServiceOptions) {
-		this.levels = options.levels;
-		this.defaultTTL = options.defaultTTL ?? DEFAULT_TTL;
-		this.defaultLockTTL = options.defaultLockTTL ?? DEFAULT_LOCK_TTL;
-		this.versioning = options.versioning ?? false;
+		const { defaultTTL, defaultLockTTL, levels, versioning } = options;
+
+		this.levels = levels;
+		this.defaultTTL =
+			typeof defaultTTL === "number" && !Number.isNaN(defaultTTL)
+				? defaultTTL
+				: DEFAULT_TTL;
+		this.defaultLockTTL =
+			typeof defaultLockTTL === "number" && !Number.isNaN(defaultLockTTL)
+				? defaultLockTTL
+				: DEFAULT_LOCK_TTL;
+		this.versioning = versioning ?? false;
 	}
 
+	/**
+	 * Flush all cache levels
+	 * Note: Do not use in production as it will clear the entire cache and may lead to performance issues.
+	 * @return void
+	 */
 	async flushAll(): Promise<void> {
 		await Promise.allSettled(
 			this.levels.map((level) =>
@@ -36,6 +50,62 @@ export class CacheService {
 				}, "Failed to flush cache level"),
 			),
 		);
+	}
+
+	/**
+	 * Loop through cache levels to set the values for the given keys
+	 * @param keys - cache keys
+	 * @param values - values to cache
+	 * @param ttl - time to live in seconds
+	 */
+
+	async mset<T>(
+		keys: string[],
+		values: T[],
+		ttl = this.defaultTTL,
+	): Promise<void> {
+		await Promise.allSettled(
+			this.levels.map((level) =>
+				handleGracefully(
+					() => level.mset<T>(keys, values, ttl),
+					"Failed to mset keys in cache level",
+				),
+			),
+		);
+	}
+
+	/**
+	 * Loop through cache levels to get the values for the given keys,
+	 * upon failure backfill missing keys
+	 * @param keys - cache keys
+	 * @returns array of cached values or null if not found
+	 */
+	async mget(keys: string[]) {
+		const results: unknown[] = new Array(keys.length).fill(null);
+		const missingKeysIndexes: number[] = [];
+		const failedLevels: CacheLevel[] = [];
+
+		for (const level of this.levels) {
+			const levelResults = await level.mget<unknown>(keys);
+
+			for (let i = 0; i < keys.length; i++) {
+				const value = levelResults[i];
+				if (value !== undefined && value !== null) {
+					results[i] = value;
+				} else {
+					failedLevels.push(level);
+					missingKeysIndexes.push(i);
+				}
+			}
+		}
+
+		await backfillLevelsWithMultiKeys(
+			failedLevels,
+			keys.filter((_, index) => missingKeysIndexes.includes(index)),
+			results.filter((_, index) => missingKeysIndexes.includes(index)),
+		);
+
+		return results;
 	}
 
 	/**
@@ -133,6 +203,16 @@ export class CacheService {
 		await this.set(key, newValue, ttl, namespace);
 
 		return newValue as T;
+	}
+
+	async mdel(keys: string[]): Promise<void> {
+		await Promise.allSettled(
+			this.levels.map((level) =>
+				handleGracefully(async () => {
+					return await level.mdel(keys);
+				}, "Failed to mdel keys from cache level"),
+			),
+		);
 	}
 
 	/**

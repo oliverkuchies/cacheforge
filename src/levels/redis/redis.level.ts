@@ -32,6 +32,20 @@ export class RedisCacheLevel implements CacheLevel, Lockable {
 		return parseIfJSON<T>(cachedValue);
 	}
 
+	async mset<T>(keys: string[], values: T[], ttl = DEFAULT_TTL): Promise<T[]> {
+		const pipeline = this.client.pipeline();
+
+		for (let i = 0; i < keys.length; i++) {
+			const key = keys[i];
+			const value = values[i];
+			pipeline.set(key, serializeForRedis(value), "EX", ttl);
+		}
+
+		await pipeline.exec();
+
+		return values;
+	}
+
 	async mget<T>(keys: string[]): Promise<T[]> {
 		const results = await this.client.mget(...keys);
 		const finalResults: T[] = [];

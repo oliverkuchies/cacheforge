@@ -1,5 +1,14 @@
 export interface CacheLevel {
 	/**
+	 * Store multiple values in the cache.
+	 * @param keys The cache keys.
+	 * @param values The values to cache.
+	 * @param ttl Time to live in seconds.
+	 * @returns The cached values.
+	 */
+	mset<T>(keys: string[], values: T[], ttl?: number): Promise<T[]>;
+
+	/**
 	 * Retrieve multiple values from the cache.
 	 * @param key The cache key.
 	 * @param value A function that returns a value or a direct value to cache if the key is not found.
