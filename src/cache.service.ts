@@ -26,10 +26,14 @@ export class CacheService {
 		const { defaultTTL, defaultLockTTL, levels, versioning } = options;
 
 		this.levels = levels;
-		this.defaultTTL = (typeof defaultTTL === "number" && 
-			!isNaN(defaultTTL)) ? defaultTTL : DEFAULT_TTL;
-		this.defaultLockTTL = (typeof defaultLockTTL === "number" && 
-			!isNaN(defaultLockTTL)) ? defaultLockTTL : DEFAULT_LOCK_TTL;
+		this.defaultTTL =
+			typeof defaultTTL === "number" && !Number.isNaN(defaultTTL)
+				? defaultTTL
+				: DEFAULT_TTL;
+		this.defaultLockTTL =
+			typeof defaultLockTTL === "number" && !Number.isNaN(defaultLockTTL)
+				? defaultLockTTL
+				: DEFAULT_LOCK_TTL;
 		this.versioning = versioning ?? false;
 	}
 

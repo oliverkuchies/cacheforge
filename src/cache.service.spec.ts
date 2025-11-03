@@ -593,15 +593,15 @@ describe("Multi-get, Multi-delete and multi set functionality", () => {
 		const retrievedValues = await cache.mget(keys);
 
 		expect(retrievedValues).toEqual(values);
-		
+
 		await cache.mdel(keys);
 
 		expect(await cache.mget(keys)).toEqual([null, null, null]);
 	});
 });
 
-describe('CacheService should instantiate with default TTL and Lock TTL values', () => {
-	it('should use provided defaultTTL and defaultLockTTL values', () => {
+describe("CacheService should instantiate with default TTL and Lock TTL values", () => {
+	it("should use provided defaultTTL and defaultLockTTL values", () => {
 		const customDefaultTTL = 5000;
 		const customDefaultLockTTL = 100;
 
@@ -611,18 +611,18 @@ describe('CacheService should instantiate with default TTL and Lock TTL values',
 			defaultLockTTL: customDefaultLockTTL,
 		});
 
-		expect(cache['defaultTTL']).toBe(customDefaultTTL);
-		expect(cache['defaultLockTTL']).toBe(customDefaultLockTTL);
+		expect(cache.defaultTTL).toBe(customDefaultTTL);
+		expect(cache.defaultLockTTL).toBe(customDefaultLockTTL);
 	});
 
-	it('should fallback to DEFAULT_TTL and DEFAULT_LOCK_TTL if invalid values are provided', () => {
+	it("should fallback to DEFAULT_TTL and DEFAULT_LOCK_TTL if invalid values are provided", () => {
 		const cache = new CacheService({
 			levels: [memoryLevel, redisLevel],
 			defaultTTL: NaN,
 			defaultLockTTL: NaN,
 		});
 
-		expect(cache['defaultTTL']).toBe(3600); // DEFAULT_TTL
-		expect(cache['defaultLockTTL']).toBe(30); // DEFAULT_LOCK_TTL
+		expect(cache.defaultTTL).toBe(3600); // DEFAULT_TTL
+		expect(cache.defaultLockTTL).toBe(30); // DEFAULT_LOCK_TTL
 	});
 });
