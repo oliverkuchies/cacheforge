@@ -31,13 +31,10 @@ export class CacheService {
 	async flushAll(): Promise<void> {
 		await Promise.allSettled(
 			this.levels.map((level) =>
-				handleGracefully(
-					() => {
-						level.flushAll();
-						return Promise.resolve();
-					},
-					"Failed to flush cache level",
-				),
+				handleGracefully(() => {
+					level.flushAll();
+					return Promise.resolve();
+				}, "Failed to flush cache level"),
 			),
 		);
 	}

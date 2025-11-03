@@ -416,7 +416,7 @@ describe("Cache Service with multiple levels and versioning", () => {
 			levels: [erroringLevel],
 			versioning: true,
 		});
-		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
+		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 		await service.set("test", "test123");
 		expect(warnSpy).toHaveBeenCalledWith(
 			"Failed to setWithVersion, gracefully continuing with next level.",

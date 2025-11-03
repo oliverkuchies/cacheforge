@@ -23,7 +23,8 @@ export interface MemoryLevelOptions<T> {
 }
 
 export class MemoryCacheLevel
-	implements CacheLevel, Purgable, InMemory<StoredHeapItem> {
+	implements CacheLevel, Purgable, InMemory<StoredHeapItem>
+{
 	protected store = new Map<string, StoredItem>();
 	protected heap = createCacheHeap<StoredHeapItem>((item) => item.expiry);
 	protected evictionManager: EvictionManager;
