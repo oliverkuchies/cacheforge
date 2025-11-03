@@ -32,7 +32,7 @@ import {
 	printWritePerformanceComparison,
 } from "./utilities/benchmark-output.utilities";
 
-const TOTAL_CALLS = 100000;
+const TOTAL_CALLS = 10000;
 
 describe("Cache Performance Benchmarks", () => {
 	let redisContainer: StartedRedisContainer;
@@ -61,10 +61,8 @@ describe("Cache Performance Benchmarks", () => {
 			defaultTTL: 3600,
 		});
 
-		const uniqueKeys = 1000; // Total unique keys
-
 		// Pre-populate cache with data
-		await populateCache(multiLevelCache, "benchmark_key", uniqueKeys);
+		await populateCache(multiLevelCache, "benchmark_key", TOTAL_CALLS);
 
 		// Wait a bit to ensure data is properly set
 		await new Promise((resolve) => setTimeout(resolve, 100));
@@ -80,7 +78,7 @@ describe("Cache Performance Benchmarks", () => {
 
 		// Run benchmark with 80/20 access pattern
 		const { latencies, totalDuration } = await runBenchmark(async () => {
-			const keyIndex = get8020KeyIndex(uniqueKeys);
+			const keyIndex = get8020KeyIndex(TOTAL_CALLS);
 			const key = `benchmark_key_${keyIndex}`;
 			await multiLevelCache.get(key, null);
 		}, TOTAL_CALLS);
