@@ -82,4 +82,28 @@ export class RedisCacheLevel implements CacheLevel, Lockable {
 			await lock.release();
 		}
 	}
+
+	/**
+	 * Not recommended for production use in large datasets
+	 * as it can be slow and blocking.
+	 */
+	async flushAll(): Promise<void> {
+		const stream = this.client.sscanStream("__keyspace@0__:*");
+		stream.on("data", (keys: string[]) => {
+			if (keys.length) {
+				const pipeline = this.client.pipeline();
+				keys.forEach((key) => {
+					pipeline.del(key);
+				});
+				pipeline.exec().catch((err) => {
+					console.error("Error deleting keys in flushAll:", err);
+				});
+			}
+		});
+
+		return new Promise((resolve, reject) => {
+			stream.on("end", () => resolve());
+			stream.on("error", (err) => reject(err));
+		});
+	}
 }

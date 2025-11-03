@@ -416,7 +416,7 @@ describe("Cache Service with multiple levels and versioning", () => {
 			levels: [erroringLevel],
 			versioning: true,
 		});
-		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
 		await service.set("test", "test123");
 		expect(warnSpy).toHaveBeenCalledWith(
 			"Failed to setWithVersion, gracefully continuing with next level.",
@@ -489,5 +489,25 @@ describe("get fallback to valueGetter", () => {
 		const result = await cache.get("missing", valueGetter);
 		expect(valueGetter).toHaveBeenCalled();
 		expect(result).toBe("fallback");
+	});
+});
+
+describe("should handle flushAll across levels", () => {
+	it("should flush all levels without error", async () => {
+		const cache = new CacheService({ levels: [memoryLevel, redisLevel] });
+		await cache.flushAll();
+	});
+
+	it("should actually flush levels with data", async () => {
+		const cache = new CacheService({ levels: [memoryLevel, redisLevel] });
+		const key = faker.string.alpha(10);
+		const value = faker.string.alpha(10);
+		await cache.set(key, value);
+
+		expect(await cache.get(key, null)).toBe(value);
+
+		await cache.flushAll();
+
+		expect(await cache.get(key, null)).toBe(null);
 	});
 });
