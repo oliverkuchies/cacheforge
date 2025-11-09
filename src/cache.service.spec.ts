@@ -13,7 +13,7 @@ import {
 	type StoredHeapItem,
 } from "./levels";
 import { FirstExpiringMemoryPolicy } from "./policies/first-expiring-memory.policy";
-import { MemoryPercentageLimitStrategy } from "./strategies/memory-percentage-limit.strategy";
+import { RamPercentageLimitStrategy } from "./strategies/ram-percentage-limit.strategy";
 
 let redisContainer: StartedRedisContainer;
 let redisLevel: RedisCacheLevel;
@@ -25,7 +25,7 @@ let faultyFirstLevelVersionedCacheService: CacheService;
 let faultyFirstLevelCacheService: CacheService;
 let allFaultyLevelsCacheService: CacheService;
 let allFaultyLevelsVersionedCacheService: CacheService;
-const memoryStrategy = new MemoryPercentageLimitStrategy<StoredHeapItem>(70);
+const memoryStrategy = new RamPercentageLimitStrategy<StoredHeapItem>(70);
 const evictionPolicy = new FirstExpiringMemoryPolicy();
 memoryLevel = new MemoryCacheLevel({
 	memoryStrategies: [memoryStrategy],

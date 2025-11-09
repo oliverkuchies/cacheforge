@@ -10,7 +10,7 @@ import {
 	RedisCacheLevel,
 } from "../../src/levels";
 import { FirstExpiringMemoryPolicy } from "../../src/policies/first-expiring-memory.policy";
-import { MemoryPercentageLimitStrategy } from "../../src/strategies/memory-percentage-limit.strategy";
+import { RamPercentageLimitStrategy } from "../../src/strategies/memory-percentage-limit.strategy";
 import type { StoredHeapItem } from "../../src/levels/memory/memory.level";
 import {
 	type BenchmarkResult,
@@ -52,7 +52,7 @@ describe("Cache Performance Benchmarks", () => {
 		// Create fresh cache instances for this test
 		const redisClient = new Redis(redisContainer.getConnectionUrl());
 		const memoryLevel = new MemoryCacheLevel({
-			memoryStrategies: [new MemoryPercentageLimitStrategy<StoredHeapItem>(80)],
+			memoryStrategies: [new RamPercentageLimitStrategy<StoredHeapItem>(80)],
 			evictionPolicy: new FirstExpiringMemoryPolicy(),
 		});
 		const redisLevel = new RedisCacheLevel(redisClient);
@@ -113,7 +113,7 @@ describe("Cache Performance Benchmarks", () => {
 		const redisOnlyClient = new Redis(redisContainer.getConnectionUrl());
 		
 		const memoryLevel = new MemoryCacheLevel({
-			memoryStrategies: [new MemoryPercentageLimitStrategy<StoredHeapItem>(80)],
+			memoryStrategies: [new RamPercentageLimitStrategy<StoredHeapItem>(80)],
 			evictionPolicy: new FirstExpiringMemoryPolicy(),
 		});
 		const redisLevel = new RedisCacheLevel(redisClient);
@@ -190,7 +190,7 @@ describe("Cache Performance Benchmarks", () => {
 		const redisOnlyClient = new Redis(redisContainer.getConnectionUrl());
 		
 		const memoryLevel = new MemoryCacheLevel({
-			memoryStrategies: [new MemoryPercentageLimitStrategy<StoredHeapItem>(80)],
+			memoryStrategies: [new RamPercentageLimitStrategy<StoredHeapItem>(80)],
 			evictionPolicy: new FirstExpiringMemoryPolicy(),
 		});
 		const redisLevel = new RedisCacheLevel(redisClient);
@@ -259,7 +259,7 @@ describe("Cache Performance Benchmarks", () => {
 		// Create fresh cache instance for this test
 		const redisClient = new Redis(redisContainer.getConnectionUrl());
 		const memoryLevel = new MemoryCacheLevel({
-			memoryStrategies: [new MemoryPercentageLimitStrategy<StoredHeapItem>(80)],
+			memoryStrategies: [new RamPercentageLimitStrategy<StoredHeapItem>(80)],
 			evictionPolicy: new FirstExpiringMemoryPolicy(),
 		});
 		const redisLevel = new RedisCacheLevel(redisClient);

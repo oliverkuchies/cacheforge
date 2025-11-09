@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AbstractMemoryEvictionPolicy } from "../../policies/abstract/abstract-memory-eviction.policy";
 import { FirstExpiringMemoryPolicy } from "../../policies/first-expiring-memory.policy";
-import { MemoryPercentageLimitStrategy } from "../../strategies/memory-percentage-limit.strategy";
+import { RamPercentageLimitStrategy } from "../../strategies/ram-percentage-limit.strategy";
 import { EvictionManager } from "./eviction-manager";
 import { MemoryCacheLevel, type StoredHeapItem } from "./memory.level";
 import { triggerMemoryChange } from "./memory-event.manager";
@@ -14,11 +14,11 @@ describe("EvictionManager", () => {
 	let memoryLevel: MemoryCacheLevel;
 	let evictionPolicy: FirstExpiringMemoryPolicy;
 	let memoryWithoutEvictionPolicy: MemoryCacheLevel;
-	let memoryStrategy: MemoryPercentageLimitStrategy<StoredHeapItem>;
+	let memoryStrategy: RamPercentageLimitStrategy<StoredHeapItem>;
 
 	beforeEach(() => {
 		evictionPolicy = new FirstExpiringMemoryPolicy();
-		memoryStrategy = new MemoryPercentageLimitStrategy(0); // Always triggers
+		memoryStrategy = new RamPercentageLimitStrategy(0); // Always triggers
 		memoryLevel = new MemoryCacheLevel({
 			memoryStrategies: [memoryStrategy],
 			evictionPolicy,
@@ -73,7 +73,7 @@ describe("EvictionManager", () => {
 	});
 
 	it("does not evict if no strategy triggers", async () => {
-		const neverStrategy = new MemoryPercentageLimitStrategy(100); // Never triggers
+		const neverStrategy = new RamPercentageLimitStrategy(100); // Never triggers
 		const neverOptions = {
 			memoryStrategies: [neverStrategy],
 			evictionPolicy,

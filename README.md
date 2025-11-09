@@ -68,12 +68,12 @@ import {
   CacheService,
   MemoryCacheLevel,
   FirstExpiringMemoryPolicy,
-  MemoryPercentageLimitStrategy
+  RamPercentageLimitStrategy
 } from 'cacheforge';
 
 // Create memory cache with eviction policy and strategy
 const memoryCache = new MemoryCacheLevel({
-  memoryStrategies: [new MemoryPercentageLimitStrategy(80)], // Trigger at 80% memory
+  memoryStrategies: [new RamPercentageLimitStrategy(80)], // Trigger at 80% memory
   evictionPolicy: new FirstExpiringMemoryPolicy()
 });
 
@@ -103,11 +103,11 @@ At the top (CacheService), fallbacks are handled. However the added layers do no
 Fast, in-memory caching using a Map and min-heap for efficient expiration tracking.
 
 ```typescript
-import { MemoryCacheLevel, FirstExpiringMemoryPolicy, MemoryPercentageLimitStrategy } from 'cacheforge';
+import { MemoryCacheLevel, FirstExpiringMemoryPolicy, RamPercentageLimitStrategy } from 'cacheforge';
 
 const memoryCache = new MemoryCacheLevel({
   memoryStrategies: [
-    new MemoryPercentageLimitStrategy(75) // Evict when memory exceeds 75%
+    new RamPercentageLimitStrategy(75) // Evict when memory exceeds 75%
   ],
   evictionPolicy: new FirstExpiringMemoryPolicy()
 });
@@ -145,14 +145,26 @@ const policy = new FirstExpiringMemoryPolicy();
 
 Strategies check conditions and trigger eviction policies when thresholds are met.
 
-#### MemoryPercentageLimitStrategy
+#### MemorySizeLimitStrategy (Recommended Default)
+Triggers eviction when the total size of items in the cache exceeds a defined threshold (as a percentage of the Node.js process heap).
+
+This strategy is recommended as the default for most applications, as it provides a more accurate measurement of cache memory usage and helps prevent out-of-memory errors.
+
+```typescript
+import { MemorySizeLimitStrategy } from 'cacheforge';
+
+// Trigger eviction when cache uses 10% or more of Node.js heap
+const strategy = new MemorySizeLimitStrategy(10);
+```
+
+#### RamPercentageLimitStrategy
 Triggers eviction when system memory usage exceeds a percentage threshold.
 
 ```typescript
-import { MemoryPercentageLimitStrategy } from 'cacheforge';
+import { RamPercentageLimitStrategy } from 'cacheforge';
 
 // Trigger eviction at 80% memory usage
-const strategy = new MemoryPercentageLimitStrategy(80);
+const strategy = new RamPercentageLimitStrategy(80);
 ```
 
 ## Usage Guide
@@ -166,13 +178,13 @@ import {
   CacheService,
   MemoryCacheLevel,
   FirstExpiringMemoryPolicy,
-  MemoryPercentageLimitStrategy
+  RamPercentageLimitStrategy
 } from 'cacheforge';
 
 const cache = new CacheService({
   levels: [
     new MemoryCacheLevel({
-      memoryStrategies: [new MemoryPercentageLimitStrategy(80)],
+      memoryStrategies: [new RamPercentageLimitStrategy(80)],
       evictionPolicy: new FirstExpiringMemoryPolicy()
     })
   ],
@@ -202,12 +214,12 @@ import {
   MemoryCacheLevel,
   RedisCacheLevel,
   FirstExpiringMemoryPolicy,
-  MemoryPercentageLimitStrategy
+  RamPercentageLimitStrategy
 } from 'cacheforge';
 import Redis from 'ioredis';
 
 const memoryCache = new MemoryCacheLevel({
-  memoryStrategies: [new MemoryPercentageLimitStrategy(75)],
+  memoryStrategies: [new RamPercentageLimitStrategy(75)],
   evictionPolicy: new FirstExpiringMemoryPolicy()
 });
 
@@ -236,7 +248,7 @@ import Redis from 'ioredis';
 const cache = new CacheService({
   levels: [
     new MemoryCacheLevel({
-      memoryStrategies: [new MemoryPercentageLimitStrategy(80)],
+      memoryStrategies: [new RamPercentageLimitStrategy(80)],
       evictionPolicy: new FirstExpiringMemoryPolicy()
     }),
     new RedisCacheLevel(new Redis())
@@ -556,8 +568,11 @@ await cache.invalidateKey('user:123');
 
 ### 4. Memory Strategy Thresholds
 
-- Development: 80-90% (more headroom)
-- Production: 70-75% (prevent OOM issues)
+
+- **Recommended Default:** Use `MemorySizeLimitStrategy` with a threshold of 10-20% of Node.js heap for most production workloads.
+- **RamPercentageLimitStrategy:**
+  - Development: 80-90% (more headroom)
+  - Production: 70-75% (prevent OOM issues)
 
 ### 5. Distributed Locking
 
@@ -608,14 +623,14 @@ Example test using the library:
 
 ```typescript
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { CacheService, MemoryCacheLevel, FirstExpiringMemoryPolicy, MemoryPercentageLimitStrategy } from 'cacheforge';
+import { CacheService, MemoryCacheLevel, FirstExpiringMemoryPolicy, RamPercentageLimitStrategy } from 'cacheforge';
 
 describe('Cache Service', () => {
   let cache: CacheService;
 
   beforeEach(() => {
     const memoryCache = new MemoryCacheLevel({
-      memoryStrategies: [new MemoryPercentageLimitStrategy(80)],
+      memoryStrategies: [new RamPercentageLimitStrategy(80)],
       evictionPolicy: new FirstExpiringMemoryPolicy()
     });
 

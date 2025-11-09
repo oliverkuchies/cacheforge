@@ -3,10 +3,7 @@ import type IoRedis from "ioredis";
 import type { Cluster } from "ioredis";
 import { DEFAULT_TTL } from "../../constants";
 import { parseIfJSON } from "../../utils/cache.utils";
-import {
-	deserializeFromRedis,
-	serializeForRedis,
-} from "../../utils/parsing.utils";
+import { deserialize, serialize } from "../../utils/parsing.utils";
 import { generateVersionLookupKey } from "../../utils/version.utils";
 import type { CacheLevel } from "../interfaces/cache-level";
 import type { Lockable } from "../interfaces/lockable";
@@ -38,7 +35,7 @@ export class RedisCacheLevel implements CacheLevel, Lockable {
 		for (let i = 0; i < keys.length; i++) {
 			const key = keys[i];
 			const value = values[i];
-			pipeline.set(key, serializeForRedis(value), "EX", ttl);
+			pipeline.set(key, serialize(value), "EX", ttl);
 		}
 
 		await pipeline.exec();
@@ -56,7 +53,7 @@ export class RedisCacheLevel implements CacheLevel, Lockable {
 			if (cachedValue === null || cachedValue === undefined) {
 				finalResults.push(undefined as T);
 			} else {
-				finalResults.push(deserializeFromRedis(cachedValue));
+				finalResults.push(deserialize(cachedValue));
 			}
 		}
 
@@ -64,7 +61,7 @@ export class RedisCacheLevel implements CacheLevel, Lockable {
 	}
 
 	async set<T>(key: string, value: T, ttl = DEFAULT_TTL) {
-		await this.client.set(key, serializeForRedis(value), "EX", ttl);
+		await this.client.set(key, serialize(value), "EX", ttl);
 
 		return parseIfJSON(value) as T;
 	}

@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { MemoryCacheLevel, type StoredHeapItem } from "../levels";
 import { FirstExpiringMemoryPolicy } from "../policies/first-expiring-memory.policy";
-import { MemoryPercentageLimitStrategy } from "./memory-percentage-limit.strategy";
+import { RamPercentageLimitStrategy } from "./ram-percentage-limit.strategy";
 
-describe("MemoryPercentageLimitStrategy will ensure memory usage is within limits", () => {
+describe("RamPercentageLimitStrategy will ensure memory usage is within limits", () => {
 	it("should trigger eviction when memory usage does not exceed threshold", async () => {
 		const policy = new FirstExpiringMemoryPolicy();
-		const strategy = new MemoryPercentageLimitStrategy<StoredHeapItem>(80);
+		const strategy = new RamPercentageLimitStrategy<StoredHeapItem>(80);
 		const cacheEngine = new MemoryCacheLevel({
 			memoryStrategies: [strategy],
 			evictionPolicy: policy,
@@ -24,7 +24,7 @@ describe("MemoryPercentageLimitStrategy will ensure memory usage is within limit
 
 	it("should trigger eviction when memory usage exceeds threshold", async () => {
 		const policy = new FirstExpiringMemoryPolicy();
-		const strategy = new MemoryPercentageLimitStrategy<StoredHeapItem>(0);
+		const strategy = new RamPercentageLimitStrategy<StoredHeapItem>(0);
 		const cacheEngine = new MemoryCacheLevel({
 			memoryStrategies: [strategy],
 			evictionPolicy: policy,
