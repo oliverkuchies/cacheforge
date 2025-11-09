@@ -125,6 +125,12 @@ describe("should successfully store data, and retrieve it on demand", async () =
 			await cacheEngine.mget<number>(["bingo", "bingo1", "bingo2"]),
 		).toEqual([undefined, undefined, undefined]);
 	});
+
+	it('should get store size in bytes', () => {
+		const storeSize = cacheEngine.getStoreSize();
+		expect(typeof storeSize).toBe('number');
+		expect(storeSize).toBeGreaterThanOrEqual(0);
+	});
 });
 
 describe("It should successfully manage the application memory usage", () => {

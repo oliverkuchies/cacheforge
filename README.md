@@ -145,6 +145,18 @@ const policy = new FirstExpiringMemoryPolicy();
 
 Strategies check conditions and trigger eviction policies when thresholds are met.
 
+#### MemorySizeLimitStrategy (Recommended Default)
+Triggers eviction when the total size of items in the cache exceeds a defined threshold (as a percentage of the Node.js process heap).
+
+This strategy is recommended as the default for most applications, as it provides a more accurate measurement of cache memory usage and helps prevent out-of-memory errors.
+
+```typescript
+import { MemorySizeLimitStrategy } from 'cacheforge';
+
+// Trigger eviction when cache uses 10% or more of Node.js heap
+const strategy = new MemorySizeLimitStrategy(10);
+```
+
 #### RamPercentageLimitStrategy
 Triggers eviction when system memory usage exceeds a percentage threshold.
 
@@ -556,8 +568,11 @@ await cache.invalidateKey('user:123');
 
 ### 4. Memory Strategy Thresholds
 
-- Development: 80-90% (more headroom)
-- Production: 70-75% (prevent OOM issues)
+
+- **Recommended Default:** Use `MemorySizeLimitStrategy` with a threshold of 10-20% of Node.js heap for most production workloads.
+- **RamPercentageLimitStrategy:**
+  - Development: 80-90% (more headroom)
+  - Production: 70-75% (prevent OOM issues)
 
 ### 5. Distributed Locking
 

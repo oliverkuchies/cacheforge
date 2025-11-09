@@ -12,4 +12,10 @@ export interface InMemory<T> {
 	 * @return Array of items in the heap.
 	 */
 	getHeap(): MemoryHeap<T>;
+
+	/**
+	 * Get the size of the key-value store in bytes.
+	 * @return Size of the store in bytes.
+	 */
+	getStoreSize(): number;
 }

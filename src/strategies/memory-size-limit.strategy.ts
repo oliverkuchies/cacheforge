@@ -18,7 +18,10 @@ export class MemorySizeLimitStrategy<T = StoredHeapItem>
     constructor(private threshold: number) {}
     checkCondition(memory: InMemory<T>): boolean {
         const heap = memory.getHeap();
-        const usage = (heap.getTotalSize() / process.memoryUsage().heapTotal) * 100;
+        const heapSize = heap.getTotalSize();
+        const keyStoreSize = memory.getStoreSize();
+        const totalSize = heapSize + keyStoreSize;
+        const usage = (totalSize / process.memoryUsage().heapTotal) * 100;
         return usage >= this.threshold;
     }
 }

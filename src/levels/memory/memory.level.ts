@@ -8,6 +8,7 @@ import type { InMemory } from "../interfaces/in-memory";
 import type { Purgable } from "../interfaces/purgable";
 import { EvictionManager } from "./eviction-manager";
 import { triggerMemoryChange } from "./memory-event.manager";
+import { serialize } from "../../utils/parsing.utils";
 export interface StoredItem {
 	value: unknown;
 	expiry: number;
@@ -26,6 +27,7 @@ export class MemoryCacheLevel
 	implements CacheLevel, Purgable, InMemory<StoredHeapItem>
 {
 	protected store = new Map<string, StoredItem>();
+	protected size = 0;
 	protected heap = createCacheHeap<StoredHeapItem>((item) => item.expiry);
 	protected evictionManager: EvictionManager;
 
@@ -41,15 +43,15 @@ export class MemoryCacheLevel
 		await Promise.all(deletePromises);
 	}
 
-	private insertHeapItem(item: StoredHeapItem) {
-		this.heap.insert(item);
-	}
-
 	private updateStore(key: string, item: StoredItem) {
 		this.store.set(key, item);
-
-		this.insertHeapItem({ ...item, key });
+		this.heap.insert({ ...item, key });
+		this.size += serialize(item).length;
 		triggerMemoryChange();
+	}
+
+	public getStoreSize(): number {
+		return this.size;
 	}
 
 	async mset<T>(
