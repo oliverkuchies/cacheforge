@@ -3,10 +3,7 @@ import type IoRedis from "ioredis";
 import type { Cluster } from "ioredis";
 import { DEFAULT_TTL } from "../../constants";
 import { parseIfJSON } from "../../utils/cache.utils";
-import {
-	deserialize,
-	serialize,
-} from "../../utils/parsing.utils";
+import { deserialize, serialize } from "../../utils/parsing.utils";
 import { generateVersionLookupKey } from "../../utils/version.utils";
 import type { CacheLevel } from "../interfaces/cache-level";
 import type { Lockable } from "../interfaces/lockable";

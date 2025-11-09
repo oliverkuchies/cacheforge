@@ -2,7 +2,6 @@ import type { StoredHeapItem } from "../levels";
 import type { InMemory } from "../levels/interfaces/in-memory";
 import type { MemoryManagementStrategy } from "./interfaces/memory-management-strategy";
 
-
 /**
  * This strategy checks if the total size of items in the cache exceeds a defined threshold.
  * The threshold is a percentage of the total RAM allocated to the Node.js process.
@@ -13,15 +12,15 @@ import type { MemoryManagementStrategy } from "./interfaces/memory-management-st
  */
 
 export class MemorySizeLimitStrategy<T = StoredHeapItem>
-    implements MemoryManagementStrategy<T>
+	implements MemoryManagementStrategy<T>
 {
-    constructor(private threshold: number) {}
-    checkCondition(memory: InMemory<T>): boolean {
-        const heap = memory.getHeap();
-        const heapSize = heap.getTotalSize();
-        const keyStoreSize = memory.getStoreSize();
-        const totalSize = heapSize + keyStoreSize;
-        const usage = (totalSize / process.memoryUsage().heapTotal) * 100;
-        return usage >= this.threshold;
-    }
+	constructor(private threshold: number) {}
+	checkCondition(memory: InMemory<T>): boolean {
+		const heap = memory.getHeap();
+		const heapSize = heap.getTotalSize();
+		const keyStoreSize = memory.getStoreSize();
+		const totalSize = heapSize + keyStoreSize;
+		const usage = (totalSize / process.memoryUsage().heapTotal) * 100;
+		return usage >= this.threshold;
+	}
 }

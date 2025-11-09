@@ -126,9 +126,9 @@ describe("should successfully store data, and retrieve it on demand", async () =
 		).toEqual([undefined, undefined, undefined]);
 	});
 
-	it('should get store size in bytes', () => {
+	it("should get store size in bytes", () => {
 		const storeSize = cacheEngine.getStoreSize();
-		expect(typeof storeSize).toBe('number');
+		expect(typeof storeSize).toBe("number");
 		expect(storeSize).toBeGreaterThanOrEqual(0);
 	});
 });

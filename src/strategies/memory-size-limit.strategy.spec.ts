@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { generateJSONData } from "../../tests/utilities/data.utilities";
 import { MemoryCacheLevel, type StoredHeapItem } from "../levels";
 import { FirstExpiringMemoryPolicy } from "../policies/first-expiring-memory.policy";
 import { MemorySizeLimitStrategy } from "./memory-size-limit.strategy";
-import { generateJSONData } from "../../tests/utilities/data.utilities";
 
 describe("MemorySizeLimitStrategy will ensure memory usage is within limits", () => {
 	it("should not clear memory when memory usage does not exceed threshold", async () => {
@@ -12,10 +12,10 @@ describe("MemorySizeLimitStrategy will ensure memory usage is within limits", ()
 			memoryStrategies: [strategy],
 			evictionPolicy: policy,
 		});
-		
+
 		const heapSize = cacheEngine.getHeap().getTotalSize();
 
-		expect(heapSize).toBe(0);	
+		expect(heapSize).toBe(0);
 
 		expect(strategy.checkCondition(cacheEngine)).toBe(false);
 
@@ -49,8 +49,8 @@ describe("MemorySizeLimitStrategy will ensure memory usage is within limits", ()
 		const cacheEngine = new MemoryCacheLevel({
 			memoryStrategies: [strategy],
 			evictionPolicy: policy,
-		});		
-		
+		});
+
 		await generateJSONData(cacheEngine, 10000);
 
 		const postEvictionSnapshot = cacheEngine.getHeap().getSnapshot();
@@ -58,14 +58,14 @@ describe("MemorySizeLimitStrategy will ensure memory usage is within limits", ()
 		expect(postEvictionSnapshot.length).toBeLessThan(10000);
 	});
 
-	it('should not evict items when memory usage is within threshold after adding bulk data', async () => {
+	it("should not evict items when memory usage is within threshold after adding bulk data", async () => {
 		const policy = new FirstExpiringMemoryPolicy();
 		const strategy = new MemorySizeLimitStrategy<StoredHeapItem>(50);
 		const cacheEngine = new MemoryCacheLevel({
 			memoryStrategies: [strategy],
 			evictionPolicy: policy,
-		});		
-		
+		});
+
 		await generateJSONData(cacheEngine, 1000);
 
 		const postEvictionSnapshot = cacheEngine.getHeap().getSnapshot();

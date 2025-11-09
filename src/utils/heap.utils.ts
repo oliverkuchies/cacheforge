@@ -12,7 +12,7 @@ export const createCacheHeap = <T>(comparator: (a: T) => number) => {
 	let itemCounter = 0;
 	let totalSize = 0;
 	const heap = new MinHeap<T>(comparator) as MemoryHeap<T>;
-	
+
 	const originalInsert = heap.insert.bind(heap);
 	heap.insert = (item: T) => {
 		itemCounter++;
@@ -29,7 +29,6 @@ export const createCacheHeap = <T>(comparator: (a: T) => number) => {
 		return originalClear();
 	};
 
-
 	heap.rebuild = (items: T[]) => {
 		heap.clear();
 		items.forEach((item) => {
@@ -37,7 +36,6 @@ export const createCacheHeap = <T>(comparator: (a: T) => number) => {
 		});
 		itemCounter = 0;
 	};
-
 
 	const originalPop = heap.pop.bind(heap);
 	heap.pop = () => {
