@@ -10,7 +10,6 @@
 Built with extensibility in mind, it features pluggable eviction policies, memory management strategies, and safe versioning for cache invalidation.
 
 It utilizes a leveling framework, ensuring that Level 1 is always accessed before Level 2 in the cache hierarchy.
-For example, a service may be configured to check the Level 1 cache first before querying Level 2.
 
 - Level 1 might be an in-memory cache, offering faster reads and reducing latency.
 - Level 2 could be a remote cache such as Redis or Valkey, which serves as a secondary layer when data is not found in Level 1.
