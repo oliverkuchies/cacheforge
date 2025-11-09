@@ -2,11 +2,11 @@ import { faker, fakerZH_TW } from "@faker-js/faker";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { generateJSONData } from "../../../tests/utilities/data.utilities";
 import { FirstExpiringMemoryPolicy } from "../../policies";
-import { MemoryPercentageLimitStrategy } from "../../strategies/memory-percentage-limit.strategy";
+import { RamPercentageLimitStrategy } from "../../strategies/ram-percentage-limit.strategy";
 import { MemoryCacheLevel, type StoredHeapItem } from "..";
 
 const evictionPolicy = new FirstExpiringMemoryPolicy();
-const strategy = new MemoryPercentageLimitStrategy<StoredHeapItem>(80);
+const strategy = new RamPercentageLimitStrategy<StoredHeapItem>(80);
 const cacheEngine = new MemoryCacheLevel({
 	memoryStrategies: [strategy],
 	evictionPolicy: evictionPolicy,

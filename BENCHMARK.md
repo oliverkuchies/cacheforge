@@ -203,7 +203,7 @@ Multi-level caching provides the most benefit when:
 
 ## Performance Tips
 
-1. **Tune Memory Strategies:** Adjust `MemoryPercentageLimitStrategy` threshold based on your application's memory profile
+1. **Tune Memory Strategies:** Adjust `RamPercentageLimitStrategy` threshold based on your application's memory profile
 2. **Choose Appropriate TTL:** Set cache TTL values that balance freshness and hit rate
 3. **Monitor Cache Metrics:** Track hit rates to optimize cache configuration
 4. **Size Your Cache:** Use Benchmark 4 to estimate memory requirements

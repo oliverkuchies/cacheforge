@@ -5,15 +5,15 @@ import { JSONParse, JSONStringify } from "json-with-bigint";
  * @param item The value to serialize
  * @returns A string safe for Redis storage
  */
-export const serializeForRedis = (item: unknown) => {
+export const serialize = (item: unknown) => {
 	return JSONStringify(item);
 };
 
 /**
- * Deserializes a value from Redis (previously stored with serializeForRedis).
+ * Deserializes a value from Redis (previously stored with serialize).
  * @param str The string from Redis
  * @returns The original JS value
  */
-export const deserializeFromRedis = (str: never) => {
+export const deserialize = (str: never) => {
 	return JSONParse(str);
 };

@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { generateJSONData } from "../../tests/utilities/data.utilities";
 import { MemoryCacheLevel } from "../levels";
-import { MemoryPercentageLimitStrategy } from "../strategies/memory-percentage-limit.strategy";
+import { RamPercentageLimitStrategy } from "../strategies/ram-percentage-limit.strategy";
 import { FirstExpiringMemoryPolicy } from "./first-expiring-memory.policy";
 
 const policy = new FirstExpiringMemoryPolicy();
-const strategy = new MemoryPercentageLimitStrategy(80);
+const strategy = new RamPercentageLimitStrategy(80);
 const cacheEngine = new MemoryCacheLevel({
 	memoryStrategies: [strategy],
 	evictionPolicy: policy,
@@ -33,10 +33,9 @@ describe("First Expiring Memory Policy", () => {
 
 		const policy = new FirstExpiringMemoryPolicy();
 
-		for (let i = 0; i <= 10000; i++) {
-			await policy.evict(cacheEngine);
-		}
+		await policy.evict(cacheEngine);
 
-		expect(cacheEngine.getHeap().getCount()).toEqual(0);
+		// 10% has been removed.
+		expect(cacheEngine.getHeap().getCount()).toEqual(900);
 	});
 });

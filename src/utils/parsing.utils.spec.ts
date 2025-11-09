@@ -1,6 +1,6 @@
 import { faker } from "@faker-js/faker";
 import { describe, expect, it } from "vitest";
-import { deserializeFromRedis } from "./parsing.utils";
+import { deserialize } from "./parsing.utils";
 
 describe("deserialise from redis", () => {
 	it("should handle standard objects, even if not parsed with superjson", () => {
@@ -11,6 +11,6 @@ describe("deserialise from redis", () => {
 
 		const parsed = JSON.stringify(object);
 
-		expect(deserializeFromRedis(parsed as never)).toEqual(object);
+		expect(deserialize(parsed as never)).toEqual(object);
 	});
 });

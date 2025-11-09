@@ -6,7 +6,7 @@ export async function generateJSONData(
 	recordNum: number,
 ) {
 	for (let i = 0; i < recordNum; i++) {
-		const randomTTL = Date.now() + Math.floor(Math.random() * 3600) + 1;
+		const ttl = Date.now() + 3600
 		await cacheLevel.set(
 			`key${i}`,
 			{
@@ -22,7 +22,7 @@ export async function generateJSONData(
 					3,
 				),
 			},
-			randomTTL,
+			ttl,
 		);
 	}
 }
