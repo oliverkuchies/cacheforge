@@ -681,7 +681,6 @@ MIT License - see LICENSE file for details
 ## Roadmap
 
 - [ ] LRU eviction policy implementation
-- [ ] Automatic warm-up from lower levels to memory
 - [ ] Metrics and observability hooks
 - [ ] Additional cache backends (Memcached, DynamoDB)
 - [ ] Cache stampede protection
