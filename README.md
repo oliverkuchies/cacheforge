@@ -1,15 +1,24 @@
-[![npm version](https://img.shields.io/npm/v/cacheforge.svg)](https://www.npmjs.com/package/cacheforge)
-[![npm downloads](https://img.shields.io/npm/dm/cacheforge.svg)](https://www.npmjs.com/package/cacheforge)
-[![Build Status](https://github.com/oliverkuchies/cacheforge/actions/workflows/main.yml/badge.svg)](https://github.com/oliverkuchies/cacheforge/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-# cacheforge
 
 <div>
-  <img src="assets/img/cacheforge.png" alt="CacheForge Logo" width="100" />
+  <a href="https://www.npmjs.com/package/cacheforge">
+    <img src="https://img.shields.io/npm/v/cacheforge.svg" alt="npm version" />
+  </a>
+  <a href="https://www.npmjs.com/package/cacheforge">
+    <img src="https://img.shields.io/npm/dm/cacheforge.svg" alt="npm downloads" />
+  </a>
+  <a href="https://github.com/oliverkuchies/cacheforge/actions">
+    <img src="https://github.com/oliverkuchies/cacheforge/actions/workflows/main.yml/badge.svg" alt="Build Status" />
+  </a>
+  <a href="https://opensource.org/licenses/MIT">
+    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" />
+  </a>
+</div>
+<br/>
+<div>
+  <img src="assets/img/cacheforge.png" alt="CacheForge Logo" width="300" />
 </div>
 
-<br/>
+# cacheforge
 
 **cacheforge** is a flexible, multi-level cache library for Node.js and TypeScript that combines the speed of in-memory caching with the persistence of Redis. 
 
