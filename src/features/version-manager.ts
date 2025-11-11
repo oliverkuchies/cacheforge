@@ -39,6 +39,12 @@ export class VersionManager {
 		}
 	}
 
+	/**
+	 * @description Build the versioned key
+	 * @param key
+	 * @param version
+	 * @returns {string} versioned key
+	 */
 	private buildLookupKey(key: string, version: number) {
 		return `${key}:${version}`;
 	}
@@ -120,6 +126,14 @@ export class VersionManager {
 		return this.level.get<T>(versionedKey);
 	}
 
+	/**
+	 * @description Set the value for a given key
+	 * @param key - cache key
+	 * @param value - value to set
+	 * @param ttl - optional time to live
+	 * @param namespace - optional namespace for versioning
+	 * @returns {Promise<number>} version
+	 */
 	async set<T>(key: string, value: T, ttl?: number, namespace?: string) {
 		const versionedKey = await this.getOrSetVersionedKeyLookup(key, namespace);
 		await this.level.set<T>(versionedKey, value, ttl);
@@ -128,6 +142,12 @@ export class VersionManager {
 		return version;
 	}
 
+	/**
+	 * @description Delete the value for a given key
+	 * @param key - cache key
+	 * @param namespace - optional namespace for versioning
+	 * @returns {Promise<number>} version
+	 */
 	async del(key: string, namespace?: string) {
 		const versionedKey = await this.getOrSetVersionedKeyLookup(key, namespace);
 		await this.level.del(versionedKey);
@@ -136,6 +156,11 @@ export class VersionManager {
 		return version;
 	}
 
+	/**
+	 * @description Retrieve version from versioned key
+	 * @param versionedKey
+	 * @returns {string | undefined} version
+	 */
 	private retrieveVersionFromKey(versionedKey: string): string | undefined {
 		const splitKey = versionedKey.split(":");
 		const version = splitKey[splitKey.length - 1];

@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/img/cacheforge.png" alt="CacheForge Logo" width="300" />
+</p>
+
 [![npm version](https://img.shields.io/npm/v/cacheforge.svg)](https://www.npmjs.com/package/cacheforge)
 [![npm downloads](https://img.shields.io/npm/dm/cacheforge.svg)](https://www.npmjs.com/package/cacheforge)
 [![Build Status](https://github.com/oliverkuchies/cacheforge/actions/workflows/main.yml/badge.svg)](https://github.com/oliverkuchies/cacheforge/actions)
@@ -7,14 +11,17 @@
 
 **cacheforge** is a flexible, multi-level cache library for Node.js and TypeScript that combines the speed of in-memory caching with the persistence of Redis. 
 
-Built with extensibility in mind, it features pluggable eviction policies, memory management strategies, and safe versioning for cache invalidation.
+Built with extensibility in mind, it features pluggable eviction policies, memory management strategies, and optional versioning for cache invalidation.
 
 It utilizes a leveling framework, ensuring that Level 1 is always accessed before Level 2 in the cache hierarchy.
 
 - Level 1 might be an in-memory cache, offering faster reads and reducing latency.
 - Level 2 could be a remote cache such as Redis or Valkey, which serves as a secondary layer when data is not found in Level 1.
+- And.. optionally, Level 3 could be a persistent storage solution like a database or filesystem.
 
-This approach reduces load on the lower-level cache and improves overall performance.
+This approach reduces load on the lower-level cache and improves overall performance by leveraging the strengths of each caching layer.
+
+By leveraging memory cache as the first level, you can expect latency to be up to 105x faster compared to fetching data directly from Redis.
 
 ## Features
 
@@ -92,9 +99,11 @@ console.log(user); // { name: 'John Doe', email: 'john@example.com' }
 
 ### Cache Levels
 
-Cache levels represent different storage backends in your caching hierarchy. cacheforge queries levels in order and returns the first hit, promoting cache locality.
+Cache levels represent different storage backends in your caching hierarchy. Cacheforge queries levels in order, starting from the fastest (Level 1) to the slowest (Level N).
 
-At the top (CacheService), fallbacks are handled. However the added layers do not have fallback logic to reduce complexity.
+When data is requested, the cache service checks each level sequentially until it finds the data or exhausts all levels.
+
+If data is found in a lower level, it can be promoted to higher levels for faster future access.
 
 **Built-in Levels:**
 
