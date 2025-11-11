@@ -17,7 +17,7 @@ The benchmarks use [Testcontainers](https://www.testcontainers.org/) to automati
 ### Read Performance
 
 As expected, read performance for multi level cache is (99x) faster. This is due to the memory layer contributing to additional speed and being ready for each request.
-
+```
     {
       "name": "Multi-Level Cache",
       "ops": 173913,
@@ -30,11 +30,12 @@ As expected, read performance for multi level cache is (99x) faster. This is due
       "margin": 7.28,
       "percentSlower": 99.07
     }
+```
 
 ### Write Performance
 
 Multi level cache is 33% slower at the moment at writing as it is writing to memory.
-
+```
   {
     "name": "Multi-Level Cache",
     "ops": 1002,
@@ -47,3 +48,4 @@ Multi level cache is 33% slower at the moment at writing as it is writing to mem
     "margin": 9.15,
     "percentSlower": 0
   }
+```
