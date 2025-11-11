@@ -1,13 +1,15 @@
-<p align="center">
-  <img src="assets/img/cacheforge.png" alt="CacheForge Logo" width="300" />
-</p>
-
 [![npm version](https://img.shields.io/npm/v/cacheforge.svg)](https://www.npmjs.com/package/cacheforge)
 [![npm downloads](https://img.shields.io/npm/dm/cacheforge.svg)](https://www.npmjs.com/package/cacheforge)
 [![Build Status](https://github.com/oliverkuchies/cacheforge/actions/workflows/main.yml/badge.svg)](https://github.com/oliverkuchies/cacheforge/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # cacheforge
+
+<div>
+  <img src="assets/img/cacheforge.png" alt="CacheForge Logo" width="300" />
+</div>
+
+<hr />
 
 **cacheforge** is a flexible, multi-level cache library for Node.js and TypeScript that combines the speed of in-memory caching with the persistence of Redis. 
 
