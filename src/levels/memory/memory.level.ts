@@ -142,7 +142,7 @@ export class MemoryCacheLevel
 
 		return value as T;
 	}
-	
+
 	/**
 	 * Delete a value from the cache.
 	 * @param key The cache key.
