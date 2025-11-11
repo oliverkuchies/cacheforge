@@ -1,6 +1,8 @@
 import type { MemoryHeap } from "../../utils/heap.utils";
+import type { CacheType } from "./cache-level";
 
 export interface InMemory<T> {
+	cacheType: CacheType.MEMORY;
 	/**
 	 * Get current memory usage as a percentage (entire system memory).
 	 * @return Percentage of memory used.

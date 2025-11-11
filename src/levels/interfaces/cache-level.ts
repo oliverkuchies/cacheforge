@@ -1,4 +1,11 @@
+export enum CacheType {
+	MEMORY = "memory",
+	DISK = "disk",
+	DISTRIBUTED = "distributed",
+}
+
 export interface CacheLevel {
+	cacheType: CacheType;
 	/**
 	 * Store multiple values in the cache.
 	 * @param keys The cache keys.

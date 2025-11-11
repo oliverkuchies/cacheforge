@@ -1,0 +1,27 @@
+{
+  "name": "Cache Read Performance",
+  "date": "2025-11-11T01:31:28.741Z",
+  "version": null,
+  "results": [
+    {
+      "name": "Multi-Level Cache",
+      "ops": 221896,
+      "margin": 6.48,
+      "percentSlower": 0
+    },
+    {
+      "name": "Redis-Only Cache",
+      "ops": 3676,
+      "margin": 6.48,
+      "percentSlower": 98.34
+    }
+  ],
+  "fastest": {
+    "name": "Multi-Level Cache",
+    "index": 0
+  },
+  "slowest": {
+    "name": "Redis-Only Cache",
+    "index": 1
+  }
+}

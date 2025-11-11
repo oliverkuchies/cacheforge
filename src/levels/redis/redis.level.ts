@@ -5,11 +5,13 @@ import { DEFAULT_TTL } from "../../constants";
 import { parseIfJSON } from "../../utils/cache.utils";
 import { deserialize, serialize } from "../../utils/parsing.utils";
 import { generateVersionLookupKey } from "../../utils/version.utils";
-import type { CacheLevel } from "../interfaces/cache-level";
+import { type CacheLevel, CacheType } from "../interfaces/cache-level";
 import type { Lockable } from "../interfaces/lockable";
 
 export class RedisCacheLevel implements CacheLevel, Lockable {
 	private client: IoRedis | Cluster;
+
+	public cacheType: CacheType = CacheType.DISTRIBUTED;
 
 	constructor(client: IoRedis | Cluster) {
 		this.client = client;
