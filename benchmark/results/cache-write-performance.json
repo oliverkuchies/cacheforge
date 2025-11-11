@@ -1,0 +1,27 @@
+{
+  "name": "Cache Write Performance",
+  "date": "2025-11-11T03:40:53.610Z",
+  "version": null,
+  "results": [
+    {
+      "name": "Multi-Level Cache",
+      "ops": 1002,
+      "margin": 6.6,
+      "percentSlower": 33.11
+    },
+    {
+      "name": "Redis-Only Cache",
+      "ops": 1498,
+      "margin": 9.15,
+      "percentSlower": 0
+    }
+  ],
+  "fastest": {
+    "name": "Redis-Only Cache",
+    "index": 1
+  },
+  "slowest": {
+    "name": "Multi-Level Cache",
+    "index": 0
+  }
+}

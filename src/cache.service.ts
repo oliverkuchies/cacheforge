@@ -205,6 +205,10 @@ export class CacheService {
 		return newValue as T;
 	}
 
+	/**
+	 * @description Loop through cache levels to delete the values for the given keys
+	 * @param keys - cache keys
+	 */
 	async mdel(keys: string[]): Promise<void> {
 		await Promise.allSettled(
 			this.levels.map((level) =>
@@ -255,7 +259,7 @@ export class CacheService {
 		await Promise.allSettled(
 			this.levels.map((level) => {
 				return handleGracefully(
-					() => level.set<T>(key, value, ttl),
+					async () => level.set<T>(key, value, ttl),
 					"Failed to set key in cache level",
 				);
 			}),

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" />
+    <title>Cache Read Performance</title>
+  </head>
+  <body>
+    <table>
+      <thead>
+        <tr>
+          <th>name</th><th>ops</th><th>margin</th><th>percentSlower</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Multi-Level Cache</td><td>175930</td><td>4.71</td><td>0</td>
+        </tr><tr>
+          <td>Redis-Only Cache</td><td>182</td><td>58.87</td><td>99.9</td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>

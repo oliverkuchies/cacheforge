@@ -4,7 +4,7 @@ import type { AbstractMemoryEvictionPolicy } from "../../policies/abstract/abstr
 import type { MemoryManagementStrategy } from "../../strategies/interfaces/memory-management-strategy";
 import { createCacheHeap } from "../../utils/heap.utils";
 import { serialize } from "../../utils/parsing.utils";
-import type { CacheLevel } from "../interfaces/cache-level";
+import { type CacheLevel, CacheType } from "../interfaces/cache-level";
 import type { InMemory } from "../interfaces/in-memory";
 import type { Purgable } from "../interfaces/purgable";
 import { EvictionManager } from "./eviction-manager";
@@ -26,6 +26,8 @@ export interface MemoryLevelOptions<T> {
 export class MemoryCacheLevel
 	implements CacheLevel, Purgable, InMemory<StoredHeapItem>
 {
+	public cacheType: CacheType.MEMORY = CacheType.MEMORY;
+
 	protected store = new Map<string, StoredItem>();
 	protected size = 0;
 	protected heap = createCacheHeap<StoredHeapItem>((item) => item.expiry);
@@ -43,7 +45,7 @@ export class MemoryCacheLevel
 		await Promise.all(deletePromises);
 	}
 
-	private updateStore(key: string, item: StoredItem) {
+	private async updateStore(key: string, item: StoredItem) {
 		this.store.set(key, item);
 		this.heap.insert({ ...item, key });
 		this.size += serialize(item).length;
@@ -99,12 +101,12 @@ export class MemoryCacheLevel
 
 		return cachedValue?.value as T;
 	}
-	set<T>(key: string, value: T, ttl: number = DEFAULT_TTL): Promise<T> {
+	async set<T>(key: string, value: T, ttl: number = DEFAULT_TTL): Promise<T> {
 		const expiryDate = Date.now() + ttl * 1000;
 		const storedItem = { value, expiry: expiryDate };
-		this.updateStore(key, storedItem);
+		await this.updateStore(key, storedItem);
 
-		return Promise.resolve(value as T);
+		return value as T;
 	}
 	async del(key: string): Promise<void> {
 		this.store.delete(key);

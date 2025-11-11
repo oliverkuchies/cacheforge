@@ -1,6 +1,6 @@
 import { defineConfig } from "vitest/config";
 
-export default defineConfig({
+export const config = {
 	test: {
 		coverage: {
 			exclude: [
@@ -12,5 +12,9 @@ export default defineConfig({
 			],
 		},
 		exclude: ["**/benchmarks/**", "node_modules/**"],
-	},
+	}
+};
+
+export default defineConfig({
+	...config,
 });
