@@ -6,10 +6,10 @@
 # cacheforge
 
 <div>
-  <img src="assets/img/cacheforge.png" alt="CacheForge Logo" width="300" />
+  <img src="assets/img/cacheforge.png" alt="CacheForge Logo" width="100" />
 </div>
 
-<hr />
+<br/>
 
 **cacheforge** is a flexible, multi-level cache library for Node.js and TypeScript that combines the speed of in-memory caching with the persistence of Redis. 
 
