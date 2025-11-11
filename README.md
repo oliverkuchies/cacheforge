@@ -1,3 +1,8 @@
+<div>
+  <img src="assets/img/cacheforge.png" alt="CacheForge Logo" width="300" />
+</div>
+
+# cacheforge
 
 <div>
   <a href="https://www.npmjs.com/package/cacheforge">
@@ -13,12 +18,6 @@
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" />
   </a>
 </div>
-<br/>
-<div>
-  <img src="assets/img/cacheforge.png" alt="CacheForge Logo" width="300" />
-</div>
-
-# cacheforge
 
 **cacheforge** is a flexible, multi-level cache library for Node.js and TypeScript that combines the speed of in-memory caching with the persistence of Redis. 
 
